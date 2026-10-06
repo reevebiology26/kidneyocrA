@@ -27,6 +27,21 @@
       stroke-dasharray: 5, 5;
       animation: flow-dash 1.2s linear reverse infinite;
     }
+    .touch-draggable {
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: grab;
+    }
+    .touch-draggable:active {
+      cursor: grabbing;
+    }
+    .dragging-card {
+      opacity: 0.6;
+      transform: scale(0.98);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      border-color: #0284c7 !important;
+    }
     @media print {
       body * { visibility: hidden; }
       #score-modal-content, #score-modal-content * { visibility: visible; }
@@ -456,7 +471,7 @@
         </p>
 
         <!-- 1-Screen Ordered Sentences Container -->
-        <div id="adh-sentences-list" class="flex flex-col justify-between gap-1 flex-grow overflow-hidden my-0.5"></div>
+        <div id="adh-sentences-list" class="flex flex-col justify-between gap-1 flex-grow overflow-hidden my-0.5 select-none"></div>
 
         <div id="adh-feedback-banner" class="hidden p-1.5 rounded-lg text-xs font-bold border shrink-0"></div>
       </div>
@@ -493,11 +508,11 @@
         <div class="flex flex-col flex-grow justify-between overflow-hidden">
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-bold text-slate-800 uppercase tracking-wider">
-              1. Put the stages of haemodialysis into correct order (Use ▲ / ▼):
+              1. Drag with your finger to reorder stages of haemodialysis:
             </span>
           </div>
 
-          <div id="dialysis-sentences-container" class="flex flex-col justify-between gap-1 flex-grow overflow-hidden my-0.5"></div>
+          <div id="dialysis-sentences-container" class="flex flex-col justify-between gap-1 flex-grow overflow-hidden my-0.5 select-none"></div>
 
           <div id="dialysis-feedback" class="hidden p-1 rounded-lg text-xs font-bold border shrink-0"></div>
         </div>
@@ -578,12 +593,18 @@
         <div class="flex items-center justify-between pb-1 border-b border-slate-100 shrink-0">
           <div class="flex items-center gap-1.5">
             <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">Extended Writing</span>
-            <h2 class="text-xs sm:text-sm font-bold text-slate-900">3 OCR 6-Mark Questions: Live Keyword Check & Examiner Models</h2>
+            <h2 class="text-xs sm:text-sm font-bold text-slate-900">3 OCR 6-Mark Questions (Complete All 3 for 18 Marks)</h2>
           </div>
           <div class="flex items-center space-x-1.5">
-            <button onclick="loadTab7Question(1)" id="tab7-qbtn-1" class="px-2.5 py-0.5 rounded text-xs font-bold bg-indigo-600 text-white shadow-xs cursor-pointer">Q1: Ultrafiltration</button>
-            <button onclick="loadTab7Question(2)" id="tab7-qbtn-2" class="px-2.5 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">Q2: Loop of Henle</button>
-            <button onclick="loadTab7Question(3)" id="tab7-qbtn-3" class="px-2.5 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">Q3: ADH Action</button>
+            <button onclick="loadTab7Question(1)" id="tab7-qbtn-1" class="px-2 py-0.5 rounded text-xs font-bold bg-indigo-600 text-white shadow-xs cursor-pointer flex items-center gap-1">
+              <span>Q1</span><span id="tab7-badge-1" class="text-[10px] opacity-80">(0/6)</span>
+            </button>
+            <button onclick="loadTab7Question(2)" id="tab7-qbtn-2" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer flex items-center gap-1">
+              <span>Q2</span><span id="tab7-badge-2" class="text-[10px] opacity-80">(0/6)</span>
+            </button>
+            <button onclick="loadTab7Question(3)" id="tab7-qbtn-3" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer flex items-center gap-1">
+              <span>Q3</span><span id="tab7-badge-3" class="text-[10px] opacity-80">(0/6)</span>
+            </button>
           </div>
         </div>
 
@@ -591,7 +612,7 @@
         <div class="mt-1 bg-indigo-50/70 border border-indigo-200 rounded-lg p-1.5 shrink-0">
           <div class="flex items-center justify-between text-[10px] text-indigo-900 font-bold uppercase">
             <span id="tab7-q-category">OCR A Module 5.1.4</span>
-            <span class="bg-indigo-200 text-indigo-900 px-1.5 py-0.2 rounded font-mono">[6 MARKS]</span>
+            <span class="bg-indigo-200 text-indigo-900 px-1.5 py-0.2 rounded font-mono">[MAX 6 MARKS EACH]</span>
           </div>
           <p id="tab7-prompt-text" class="text-xs font-bold text-slate-900 mt-0.5 leading-snug"></p>
         </div>
@@ -603,21 +624,24 @@
           <div class="lg:col-span-6 flex flex-col justify-between overflow-hidden">
             <div class="flex items-center justify-between text-[10px] text-slate-500 font-medium mb-0.5">
               <span>Your Written Answer:</span>
-              <span id="tab7-word-count" class="font-mono bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">0 words</span>
+              <div class="flex items-center gap-1.5">
+                <span id="tab7-current-mark-display" class="font-mono bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.2 rounded font-bold">Mark: 0 / 6</span>
+                <span id="tab7-word-count" class="font-mono bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">0 words</span>
+              </div>
             </div>
             <textarea id="tab7-student-answer" oninput="analyzeTab7Text()" placeholder="Type your extended biological response here using precise OCR terminology..." class="w-full flex-grow p-2 rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100 text-xs font-sans leading-relaxed outline-none transition bg-white resize-none"></textarea>
             
             <div class="flex items-center justify-between gap-1 mt-1 pt-1 border-t border-slate-100 shrink-0">
               <div class="flex items-center space-x-1.5">
                 <button onclick="evaluateAndShowModels()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-bold transition shadow-xs cursor-pointer">
-                  ⚡ Grade & Reveal Models
+                  ⚡ Grade Question & Reveal Models
                 </button>
                 <button onclick="clearTab7Answer()" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-xs font-medium transition cursor-pointer">
                   Clear
                 </button>
               </div>
               <span class="text-[11px] text-slate-500 font-mono">
-                Keywords: <span id="tab7-matched-terms-count" class="font-bold text-indigo-600">0</span> / <span id="tab7-total-terms-count">8</span>
+                Key terms matched: <span id="tab7-matched-terms-count" class="font-bold text-indigo-600">0</span> / <span id="tab7-total-terms-count">8</span>
               </span>
             </div>
           </div>
@@ -724,7 +748,7 @@
             <tr class="bg-teal-50 text-teal-950 font-bold border-t border-teal-200 text-xs">
               <td class="p-2">Cumulative Total</td>
               <td class="p-2 text-center font-mono font-bold text-teal-800" id="scorecard-total-marks">0</td>
-              <td class="p-2 text-right font-mono" id="scorecard-max-marks">58</td>
+              <td class="p-2 text-right font-mono" id="scorecard-max-marks">70</td>
             </tr>
           </tfoot>
         </table>
@@ -844,10 +868,10 @@
 
       const s5 = tab5Score;
       const s6 = tab6Score;
-      const s7 = tab7Score;
+      const s7 = (tab7Scores[1] || 0) + (tab7Scores[2] || 0) + (tab7Scores[3] || 0);
 
       const total = s1 + s2 + s3 + s4 + s5 + s6 + s7;
-      const maxTotal = 7 + 6 + 5 + 20 + 8 + 6 + 6; // 58 marks
+      const maxTotal = 7 + 6 + 5 + 20 + 8 + 6 + 18; // 70 marks
 
       const rows = [
         { name: "Tab 1: Nephron Structure Labels", score: s1, max: 7 },
@@ -856,7 +880,7 @@
         { name: "Tab 4: 20 MCQ Renal Quiz", score: s4, max: 20 },
         { name: "Tab 5: ADH Action Chronological Order", score: s5, max: 8 },
         { name: "Tab 6: Haemodialysis Process Order", score: s6, max: 6 },
-        { name: "Tab 7: OCR 6-Marker Extended Writing", score: s7, max: 6 }
+        { name: "Tab 7: 3x OCR 6-Markers (Extended Writing)", score: s7, max: 18 }
       ];
 
       const tbody = document.getElementById('scorecard-table-body');
@@ -900,13 +924,13 @@
     /* TAB 1: SHUFFLED UNLABELLED DRAG & DROP (1 MARK EACH) */
     /* ==================================================== */
     const tab1Labels = [
-      { id: 'D', name: 'Proximal Convoluted Tubule (PCT)', target: 'D', placed: false },
-      { id: 'A', name: 'Afferent Arteriole (Wider lumen)', target: 'A', placed: false },
-      { id: 'F', name: 'Thick Ascending Limb of Loop', target: 'F', placed: false },
-      { id: 'C', name: "Bowman's Capsule & Glomerulus", target: 'C', placed: false },
-      { id: 'G', name: 'Collecting Duct', target: 'G', placed: false },
-      { id: 'B', name: 'Efferent Arteriole (Narrower lumen)', target: 'B', placed: false },
-      { id: 'E', name: 'Descending Limb of Loop of Henle', target: 'E', placed: false }
+      { id: 'A', name: "Afferent Arteriole (wider lumen)", placed: false, assignedPin: null },
+      { id: 'B', name: "Efferent Arteriole (narrower lumen)", placed: false, assignedPin: null },
+      { id: 'C', name: "Glomerulus & Bowman's Capsule", placed: false, assignedPin: null },
+      { id: 'D', name: "Proximal Convoluted Tubule (PCT)", placed: false, assignedPin: null },
+      { id: 'E', name: "Descending Limb of Loop of Henle", placed: false, assignedPin: null },
+      { id: 'F', name: "Ascending Limb of Loop of Henle", placed: false, assignedPin: null },
+      { id: 'G', name: "Collecting Duct", placed: false, assignedPin: null }
     ];
 
     let selectedTab1LabelId = null;
@@ -916,134 +940,137 @@
       if (!bank) return;
       bank.innerHTML = '';
 
-      tab1Labels.forEach(item => {
-        const card = document.createElement('div');
-        card.onclick = () => selectTab1Label(item.id);
-        const isSelected = selectedTab1LabelId === item.id;
-        
-        let cardStyle = "border-slate-200 bg-white hover:border-teal-400 text-slate-800 cursor-pointer";
-        let statusBadge = `<span class="text-slate-400 text-[10px] font-bold">Tap</span>`;
+      tab1Labels.forEach(lbl => {
+        const btn = document.createElement('button');
+        btn.onclick = () => selectTab1Label(lbl.id);
 
-        if (item.placed) {
-          cardStyle = "border-emerald-300 bg-emerald-50 text-emerald-900 font-semibold cursor-default";
-          statusBadge = `<span class="text-emerald-700 text-[10px] font-bold">✓ Matched</span>`;
-        } else if (isSelected) {
-          cardStyle = "border-teal-500 bg-teal-50 ring-2 ring-teal-300 text-teal-950 font-bold";
-          statusBadge = `<span class="text-teal-700 text-[10px] font-bold">● Selected</span>`;
+        let style = "bg-white border-slate-200 text-slate-800 hover:border-teal-400";
+        let statusBadge = `<span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-mono font-bold">Unmatched</span>`;
+
+        if (lbl.placed) {
+          style = "bg-emerald-50 border-emerald-300 text-emerald-950 font-semibold";
+          statusBadge = `<span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-mono font-bold">✓ Pin ${lbl.id}</span>`;
+        } else if (selectedTab1LabelId === lbl.id) {
+          style = "bg-amber-50 border-amber-400 text-amber-950 ring-2 ring-amber-300 font-semibold";
+          statusBadge = `<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 font-mono font-black animate-pulse">Selected</span>`;
         }
 
-        card.className = `p-2 rounded-lg border text-xs transition flex items-center justify-between ${cardStyle}`;
-        card.innerHTML = `
-          <span>${item.name}</span>
-          ${statusBadge}
+        btn.className = `w-full text-left p-2 rounded-lg border text-xs flex items-center justify-between gap-1.5 transition cursor-pointer shadow-2xs ${style}`;
+        btn.innerHTML = `
+          <span class="text-[11px] leading-tight flex-grow">${lbl.name}</span>
+          <div class="shrink-0">${statusBadge}</div>
         `;
-        bank.appendChild(card);
+        bank.appendChild(btn);
       });
 
-      const score = tab1Labels.filter(i => i.placed).length;
-      document.getElementById('tab1-score').textContent = score;
+      // Update SVG pins A through G
+      ['A', 'B', 'C', 'D', 'E', 'F', 'G'].forEach(pinKey => {
+        const circ = document.getElementById(`tcirc-${pinKey}`);
+        const txt = document.getElementById(`ttxt-${pinKey}`);
+        const item = tab1Labels.find(l => l.id === pinKey);
 
-      ['A', 'B', 'C', 'D', 'E', 'F', 'G'].forEach(targetLetter => {
-        const item = tab1Labels.find(l => l.target === targetLetter);
-        const circ = document.getElementById(`tcirc-${targetLetter}`);
-        const txt = document.getElementById(`ttxt-${targetLetter}`);
         if (circ && txt) {
           if (item && item.placed) {
             circ.setAttribute('fill', '#059669');
             circ.setAttribute('stroke', '#34d399');
-            txt.textContent = '✓';
+            circ.setAttribute('stroke-dasharray', 'none');
+            txt.setAttribute('fill', '#ffffff');
+          } else if (selectedTab1LabelId === pinKey) {
+            circ.setAttribute('fill', '#d97706');
+            circ.setAttribute('stroke', '#fef08a');
+            txt.setAttribute('fill', '#ffffff');
           } else {
             circ.setAttribute('fill', '#1e293b');
-            circ.setAttribute('stroke', '#f8fafc');
-            txt.textContent = targetLetter;
+            circ.setAttribute('stroke', '#94a3b8');
+            circ.setAttribute('stroke-dasharray', '3,3');
+            txt.setAttribute('fill', '#f8fafc');
           }
         }
       });
+
+      const score = tab1Labels.filter(l => l.placed).length;
+      document.getElementById('tab1-score').textContent = score;
 
       const status = document.getElementById('tab1-selection-status');
       if (status) {
         if (selectedTab1LabelId) {
           const sel = tab1Labels.find(l => l.id === selectedTab1LabelId);
-          status.textContent = `Selected: "${sel.name}". Now tap its matching letter pin on the diagram!`;
+          status.textContent = `● Selected: "${sel ? sel.name : ''}" - Now tap its letter circle pin!`;
+          status.className = "text-amber-400 font-bold";
         } else {
-          status.textContent = '● Tap a label on right, then tap letter circle A–G';
+          status.textContent = "● Tap a label on right, then tap letter circle A–G";
+          status.className = "text-teal-400 font-semibold";
         }
       }
     }
 
     function selectTab1Label(id) {
-      const item = tab1Labels.find(l => l.id === id);
-      if (item && item.placed) return;
+      const lbl = tab1Labels.find(l => l.id === id);
+      if (lbl && lbl.placed) {
+        showToast("Structure already correctly placed!", "bg-slate-700");
+        return;
+      }
       selectedTab1LabelId = (selectedTab1LabelId === id) ? null : id;
       renderTab1();
     }
 
-    function handleTargetPinClick(targetLetter) {
+    function handleTargetPinClick(pinId) {
       if (!selectedTab1LabelId) {
-        showToast(`Target ${targetLetter}: Choose a label from the right first!`, "bg-slate-700");
+        showToast(`Tap a label on the right first, then tap Pin ${pinId}!`, "bg-slate-700");
         return;
       }
-      placeTab1Label(selectedTab1LabelId, targetLetter);
-    }
 
-    function placeTab1Label(labelId, targetLetter) {
-      if (labelId === targetLetter) {
-        const item = tab1Labels.find(i => i.id === labelId);
-        if (item) item.placed = true;
+      if (selectedTab1LabelId === pinId) {
+        const lbl = tab1Labels.find(l => l.id === pinId);
+        if (lbl) lbl.placed = true;
         selectedTab1LabelId = null;
         renderTab1();
-        showToast("Correct anatomical position! +1 Mark", "bg-emerald-600");
+        showToast(`Correct! Pin ${pinId} matched (+1 Mark)`, "bg-emerald-600");
       } else {
-        showToast("Incorrect location! Check cortical vs medullary placement.", "bg-rose-600");
+        showToast(`Incorrect pin for this structure. Try again!`, "bg-rose-600");
       }
     }
 
     function resetTab1() {
-      tab1Labels.forEach(i => i.placed = false);
+      tab1Labels.forEach(l => { l.placed = false; l.assignedPin = null; });
       tab1Labels.sort(() => Math.random() - 0.5);
       selectedTab1LabelId = null;
       renderTab1();
-      showToast("Nephron labels reset & shuffled!", "bg-slate-700");
+      showToast("Activity 1 reset & shuffled!", "bg-slate-700");
     }
 
     /* ==================================================== */
-    /* TAB 2: FUNCTION MATCHER LOGIC                        */
+    /* TAB 2: FUNCTION MATCHER LOGIC (NO PART NAMES)        */
     /* ==================================================== */
     const tab2Events = [
       {
         pin: 1,
-        title: "Glomerulus & Bowman's Capsule",
-        desc: "Ultrafiltration of blood under high hydrostatic pressure across endothelium, basement membrane & podocytes.",
+        desc: "Ultrafiltration of blood under high hydrostatic pressure across fenestrated endothelium, basement membrane & podocyte filtration slits.",
         pairedPin: null
       },
       {
         pin: 2,
-        title: "Proximal Convoluted Tubule",
-        desc: "Selective reabsorption of 100% of glucose and amino acids via secondary active co-transport with Na⁺.",
+        desc: "Selective reabsorption of 100% of filtered glucose and amino acids via secondary active co-transport with Na⁺ across microvilli.",
         pairedPin: null
       },
       {
         pin: 3,
-        title: "Descending Limb of Loop",
-        desc: "Permeable to water by osmosis into medullary tissue fluid, but impermeable to sodium and chloride ions.",
+        desc: "Permeable to water via osmosis into medullary tissue fluid, but impermeable to sodium and chloride ions.",
         pairedPin: null
       },
       {
         pin: 4,
-        title: "Thick Ascending Limb of Loop",
-        desc: "Impermeable to water; actively pumps Na⁺ and Cl⁻ out into medulla creating high interstitial osmotic gradient.",
+        desc: "Impermeable to water; actively pumps Na⁺ and Cl⁻ out into medulla using ATP to generate a high interstitial osmotic gradient.",
         pairedPin: null
       },
       {
         pin: 5,
-        title: "Distal Convoluted Tubule",
-        desc: "Fine-tunes blood water potential, mineral ion balance, and blood pH through selective ion transport.",
+        desc: "Fine-tunes blood water potential, mineral ion balance, and blood pH through selective ion transport and secretion.",
         pairedPin: null
       },
       {
         pin: 6,
-        title: "Collecting Duct",
-        desc: "Variable water reabsorption regulated by ADH; aquaporins insert into luminal membranes during dehydration.",
+        desc: "Variable water reabsorption regulated by ADH; aquaporins insert into luminal membranes to reabsorb water into the hypertonic medulla.",
         pairedPin: null
       }
     ];
@@ -1077,11 +1104,10 @@
           }
         }
 
-        card.className = `p-1.5 rounded-lg border text-xs transition cursor-pointer flex items-center justify-between gap-2 shadow-2xs ${borderStyle}`;
+        card.className = `p-2 rounded-lg border text-xs transition cursor-pointer flex items-center justify-between gap-2 shadow-2xs ${borderStyle}`;
         card.innerHTML = `
           <div class="flex-grow">
-            <span class="font-bold block text-[11px] leading-tight text-slate-900">${evt.title}</span>
-            <span class="text-[10px] text-slate-600 leading-tight block mt-0.5">${evt.desc}</span>
+            <span class="text-[11px] text-slate-800 leading-snug block">${evt.desc}</span>
           </div>
           <div class="shrink-0">
             ${pinBadge}
@@ -1145,9 +1171,9 @@
       renderTab2();
 
       if (wasCorrect) {
-        showToast(`Correct! Pin ${evt.pin} matches "${evt.title}" (+1 Mark)`, "bg-emerald-600");
+        showToast(`Correct! Pin ${evt.pin} successfully matched! (+1 Mark)`, "bg-emerald-600");
       } else {
-        showToast(`Incorrect match for Pin ${evt.pairedPin}. Check physiology again!`, "bg-rose-600");
+        showToast(`Incorrect match for Pin ${evt.pairedPin}. Review nephron physiology!`, "bg-rose-600");
       }
     }
 
@@ -1164,165 +1190,165 @@
     /* TAB 3: MOLECULE FATE & TRANSPORT MECHANISMS          */
     /* ==================================================== */
     const tab3Molecules = [
-      { id: 'glu', name: 'Glucose', hint: 'Hexose sugar, 180 MW' },
-      { id: 'wat', name: 'Water (H₂O)', hint: 'Solvent, 18 MW' },
-      { id: 'sod', name: 'Sodium Ions (Na⁺)', hint: 'Cation, 23 MW' },
-      { id: 'ure', name: 'Urea', hint: 'Nitrogenous waste, 60 MW' },
-      { id: 'pro', name: 'Plasma Albumin', hint: 'Protein, 68,000 MW' }
+      { id: 'glucose', name: 'Glucose' },
+      { id: 'water', name: 'Water (H₂O)' },
+      { id: 'sodium', name: 'Sodium Ions (Na⁺)' },
+      { id: 'urea', name: 'Urea' },
+      { id: 'protein', name: 'Plasma Proteins (e.g. Albumin)' }
     ];
 
     const tab3Targets = [
       {
-        id: 'glu',
-        action: '100% Selectively Reabsorbed',
-        location: 'Proximal Convoluted Tubule (PCT)',
-        condition: 'Via secondary active transport (co-transport with Na⁺ across microvilli), then facilitated diffusion into peritubular capillaries.'
+        id: 'glucose',
+        action: "100% selectively reabsorbed from tubular filtrate",
+        location: "Proximal Convoluted Tubule (PCT)",
+        conditions: "Secondary active co-transport with Na⁺ across microvilli; requires ATP for basolateral Na⁺/K⁺ ATPase pumps."
       },
       {
-        id: 'wat',
-        action: 'Variable Osmotic Reabsorption',
-        location: 'Descending Limb & Collecting Duct',
-        condition: 'Osmosis down medullary gradient; fine-tuned in Collecting Duct via aquaporins controlled by ADH.'
+        id: 'water',
+        action: "Bulk reabsorption & variable osmoregulation",
+        location: "PCT (~80%), Descending Limb, and Collecting Duct",
+        conditions: "Moves by osmosis down steep water potential gradients; collecting duct permeability regulated by ADH inserting aquaporins."
       },
       {
-        id: 'sod',
-        action: 'Actively Pumped (Gradient Driver)',
-        location: 'Thick Ascending Limb of Henle',
-        condition: 'Active transport via Na⁺/K⁺ ATPase pumps into medullary interstitium. Tubule impermeable to water.'
+        id: 'sodium',
+        action: "Active solute pumping to generate medullary osmotic gradient",
+        location: "Thick Ascending Limb of Loop of Henle & PCT",
+        conditions: "Actively pumped out into interstitial fluid using ATP; ascending limb is strictly impermeable to water."
       },
       {
-        id: 'ure',
-        action: 'Filtered & Concentrated Excretion',
-        location: 'Glomerulus → Collecting Duct',
-        condition: 'Ultrafiltered freely; about 50% passive diffusion, remaining urea is excreted concentrated in urine.'
+        id: 'urea',
+        action: "Concentrated for nitrogenous excretion with partial passive diffusion",
+        location: "Concentrated throughout nephron; excreted via Collecting Duct",
+        conditions: "Passively diffuses down concentration gradient as water is removed; remaining ~50% is excreted in hypertonic urine."
       },
       {
-        id: 'pro',
-        action: 'Retained in Capillary Blood',
-        location: 'Glomerular Capillaries',
-        condition: 'Too large to cross basement membrane mesh (>69,000 MW sieve); maintains high blood oncotic pressure.'
+        id: 'protein',
+        action: "Completely retained in glomerular capillary blood",
+        location: "Renal Circulation (does not cross into Bowman's capsule)",
+        conditions: "Molecular mass > 69,000 MW; repelled by negatively charged glycoproteins and basement membrane mesh pores."
       }
     ];
 
     let tab3Matches = [
-      { targetId: 'glu', matchedMolId: null },
-      { targetId: 'wat', matchedMolId: null },
-      { targetId: 'sod', matchedMolId: null },
-      { targetId: 'ure', matchedMolId: null },
-      { targetId: 'pro', matchedMolId: null }
+      { targetId: 'glucose', matchedMolId: null },
+      { targetId: 'water', matchedMolId: null },
+      { targetId: 'sodium', matchedMolId: null },
+      { targetId: 'urea', matchedMolId: null },
+      { targetId: 'protein', matchedMolId: null }
     ];
 
-    let selectedTab3MolId = null;
+    let selectedTab3MoleculeId = null;
 
     function renderTab3() {
       const bank = document.getElementById('tab3-molecules-bank');
-      const targetsCont = document.getElementById('tab3-targets-container');
-      if (!bank || !targetsCont) return;
+      const targetsContainer = document.getElementById('tab3-targets-container');
+      if (!bank || !targetsContainer) return;
 
       bank.innerHTML = '';
       tab3Molecules.forEach(mol => {
-        const isMatched = tab3Matches.some(m => m.matchedMolId === mol.id && m.targetId === mol.id);
-        const isSelected = selectedTab3MolId === mol.id;
+        const isMatched = tab3Matches.some(m => m.matchedMolId === mol.id && m.matchedMolId === m.targetId);
+        const isSelected = selectedTab3MoleculeId === mol.id;
 
-        const card = document.createElement('div');
-        card.onclick = () => selectTab3Molecule(mol.id);
+        const btn = document.createElement('button');
+        btn.onclick = () => selectTab3Molecule(mol.id);
 
-        let style = "border-slate-200 bg-white hover:border-amber-400 text-slate-800 cursor-pointer";
-        let badge = `<span class="text-slate-400 text-[10px] font-bold">Select</span>`;
-
+        let style = "bg-white border-slate-200 text-slate-800 hover:border-amber-400";
         if (isMatched) {
-          style = "border-emerald-300 bg-emerald-50 text-emerald-950 font-bold opacity-75 cursor-default";
-          badge = `<span class="text-emerald-700 text-[10px]">✓ Matched</span>`;
+          style = "bg-emerald-50 border-emerald-300 text-emerald-950 font-bold opacity-75";
         } else if (isSelected) {
-          style = "border-amber-500 bg-amber-50 ring-2 ring-amber-300 text-amber-950 font-black";
-          badge = `<span class="text-amber-700 text-[10px]">● Active</span>`;
+          style = "bg-amber-100 border-amber-500 text-amber-950 ring-2 ring-amber-300 font-black";
         }
 
-        card.className = `p-2 rounded-lg border text-xs transition flex items-center justify-between shadow-2xs ${style}`;
-        card.innerHTML = `
-          <div>
-            <span class="font-bold text-[11px] block">${mol.name}</span>
-            <span class="text-[9px] text-slate-500">${mol.hint}</span>
-          </div>
-          ${badge}
+        btn.className = `w-full text-left p-2 rounded-lg border text-xs transition cursor-pointer flex items-center justify-between gap-1 shadow-2xs ${style}`;
+        btn.innerHTML = `
+          <span class="text-[11px] font-semibold">${mol.name}</span>
+          <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${isMatched ? 'bg-emerald-600 text-white' : isSelected ? 'bg-amber-500 text-slate-950' : 'bg-slate-100 text-slate-500'}">
+            ${isMatched ? '✓ Placed' : isSelected ? 'Selected' : 'Select'}
+          </span>
         `;
-        bank.appendChild(card);
+        bank.appendChild(btn);
       });
 
-      targetsCont.innerHTML = '';
+      targetsContainer.innerHTML = '';
       tab3Targets.forEach(tgt => {
-        const matchObj = tab3Matches.find(m => m.targetId === tgt.id);
-        const pairedMol = matchObj ? tab3Molecules.find(m => m.id === matchObj.matchedMolId) : null;
-        const isCorrect = (pairedMol && pairedMol.id === tgt.id);
+        const matchRecord = tab3Matches.find(m => m.targetId === tgt.id);
+        const matchedMol = matchRecord && matchRecord.matchedMolId ? tab3Molecules.find(m => m.id === matchRecord.matchedMolId) : null;
+        const isCorrect = matchRecord && matchRecord.matchedMolId === tgt.id;
 
         const card = document.createElement('div');
-        card.onclick = () => pairTab3Destination(tgt.id);
+        card.onclick = () => matchTab3Target(tgt.id);
 
-        let cardClass = "border-slate-200 bg-white hover:border-amber-400 cursor-pointer";
-        let matchLabel = `<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded border border-slate-300">Tap to place</span>`;
+        let borderStyle = "border-slate-200 bg-white hover:border-amber-400";
+        let badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">Tap molecule first</span>`;
 
-        if (pairedMol) {
+        if (matchedMol) {
           if (isCorrect) {
-            cardClass = "border-emerald-400 bg-emerald-50 text-emerald-950 font-semibold";
-            matchLabel = `<span class="text-[10px] font-bold text-white bg-emerald-600 px-2 py-0.5 rounded">✓ ${pairedMol.name}</span>`;
+            borderStyle = "border-emerald-300 bg-emerald-50/80 text-emerald-950";
+            badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-600 text-white shadow-2xs">✓ ${matchedMol.name}</span>`;
           } else {
-            cardClass = "border-rose-400 bg-rose-50 text-rose-950 font-semibold";
-            matchLabel = `<span class="text-[10px] font-bold text-white bg-rose-600 px-2 py-0.5 rounded">✗ ${pairedMol.name} (Retry)</span>`;
+            borderStyle = "border-rose-300 bg-rose-50/80 text-rose-950";
+            badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white shadow-2xs">✗ ${matchedMol.name} (Retry)</span>`;
           }
         }
 
-        card.className = `p-1.5 rounded-lg border text-xs transition flex items-center justify-between gap-2 shadow-2xs ${cardClass}`;
+        card.className = `p-2 rounded-lg border text-xs transition cursor-pointer flex items-center justify-between gap-2 shadow-2xs ${borderStyle}`;
         card.innerHTML = `
-          <div class="flex-grow">
-            <div class="flex items-center gap-1.5">
-              <span class="font-bold text-[11px] text-slate-900">${tgt.action}</span>
-              <span class="text-[9px] font-mono px-1 py-0.2 rounded bg-sky-100 text-sky-800 font-semibold">${tgt.location}</span>
+          <div class="flex-grow space-y-0.5">
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-bold text-slate-900">${tgt.action}</span>
+              <span class="text-[10px] px-1 py-0.2 rounded bg-amber-100 text-amber-800 font-medium">${tgt.location}</span>
             </div>
-            <p class="text-[10px] text-slate-600 leading-tight mt-0.5">${tgt.condition}</p>
+            <p class="text-[10px] text-slate-600 leading-tight">${tgt.conditions}</p>
           </div>
-          <div class="shrink-0">
-            ${matchLabel}
-          </div>
+          <div class="shrink-0">${badge}</div>
         `;
-        targetsCont.appendChild(card);
+        targetsContainer.appendChild(card);
       });
 
       const score = tab3Matches.filter(m => m.matchedMolId === m.targetId).length;
       document.getElementById('tab3-score').textContent = score;
 
-      const stat = document.getElementById('tab3-selection-status');
-      if (stat) {
-        if (selectedTab3MolId) {
-          const mol = tab3Molecules.find(m => m.id === selectedTab3MolId);
-          stat.textContent = `Selected: "${mol.name}". Now tap its matching physiological fate card on the right!`;
+      const status = document.getElementById('tab3-selection-status');
+      if (status) {
+        if (selectedTab3MoleculeId) {
+          const mol = tab3Molecules.find(m => m.id === selectedTab3MoleculeId);
+          status.textContent = `Selected: "${mol ? mol.name : ''}" - Now click its matching physiological fate card!`;
+          status.className = "text-[10px] text-amber-800 font-bold bg-amber-50 p-1.5 rounded border border-amber-300 text-center leading-tight";
         } else {
-          stat.textContent = 'Tap a molecule card, then tap its matching destination card on the right';
+          status.textContent = "Tap a molecule card on the left, then tap its matching destination card on the right";
+          status.className = "text-[10px] text-slate-500 font-medium bg-white p-1.5 rounded border border-slate-200 text-center leading-tight";
         }
       }
     }
 
-    function selectTab3Molecule(molId) {
-      selectedTab3MolId = (selectedTab3MolId === molId) ? null : molId;
+    function selectTab3Molecule(id) {
+      const isAlreadyCorrect = tab3Matches.some(m => m.matchedMolId === id && m.targetId === id);
+      if (isAlreadyCorrect) {
+        showToast("Molecule already correctly matched!", "bg-slate-700");
+        return;
+      }
+      selectedTab3MoleculeId = (selectedTab3MoleculeId === id) ? null : id;
       renderTab3();
     }
 
-    function pairTab3Destination(targetId) {
-      if (!selectedTab3MolId) {
-        showToast("Please tap a molecule on the left first!", "bg-slate-700");
+    function matchTab3Target(targetId) {
+      if (!selectedTab3MoleculeId) {
+        showToast("Select a molecule from the left first!", "bg-slate-700");
         return;
       }
 
-      const matchObj = tab3Matches.find(m => m.targetId === targetId);
-      if (matchObj) {
-        matchObj.matchedMolId = selectedTab3MolId;
-        const isCorrect = (selectedTab3MolId === targetId);
-        selectedTab3MolId = null;
+      const record = tab3Matches.find(m => m.targetId === targetId);
+      if (record) {
+        record.matchedMolId = selectedTab3MoleculeId;
+        const isCorrect = (record.matchedMolId === record.targetId);
+        selectedTab3MoleculeId = null;
         renderTab3();
 
         if (isCorrect) {
-          showToast("Correct physiological mechanism & location! +1 Mark", "bg-emerald-600");
+          showToast("Correct! Molecule physiology matched (+1 Mark)", "bg-emerald-600");
         } else {
-          showToast("Incorrect match. Re-check filtration size & transport methods.", "bg-rose-600");
+          showToast("Incorrect match. Review nephron transport mechanisms!", "bg-rose-600");
         }
       }
     }
@@ -1331,395 +1357,476 @@
       tab3Matches.forEach(m => m.matchedMolId = null);
       tab3Molecules.sort(() => Math.random() - 0.5);
       tab3Targets.sort(() => Math.random() - 0.5);
-      selectedTab3MolId = null;
+      selectedTab3MoleculeId = null;
       renderTab3();
-      showToast("Molecule fate activity reset & shuffled!", "bg-slate-700");
+      showToast("Activity 3 reset & shuffled!", "bg-slate-700");
     }
 
     /* ==================================================== */
-    /* TAB 4: 20 OCR MULTIPLE CHOICE QUESTIONS DATASET      */
+    /* TAB 4: 20 MCQ QUIZ (ONE QUESTION AT A TIME)          */
     /* ==================================================== */
     const mcq20Data = [
       {
-        q: "Why is hydrostatic pressure significantly higher in the glomerulus than in normal systemic capillaries?",
-        opts: [
-          "The renal vein has high pressure backing up into the kidney",
-          "The afferent arteriole has a wider lumen than the narrower efferent arteriole",
-          "Heart rate increases during ultrafiltration to pump blood faster",
-          "Podocytes actively squeeze the capillaries to force liquid out"
+        q: "Why is the hydrostatic pressure inside the glomerular capillaries unusually high?",
+        options: [
+          "The afferent arteriole has a wider lumen diameter than the narrower efferent arteriole",
+          "The efferent arteriole has a wider lumen diameter than the narrower afferent arteriole",
+          "Peristaltic muscle contractions of the Bowman's capsule wall pump fluid against the glomerulus",
+          "The renal vein possesses bicuspid valves that elevate backward blood pressure"
         ],
-        ans: 1,
-        exp: "The difference in diameter between the wider afferent arteriole and narrower efferent arteriole produces high resistance to outflow, generating the hydrostatic pressure needed for ultrafiltration."
+        ans: 0,
+        rationale: "The afferent arteriole has a significantly wider diameter than the narrower efferent arteriole, creating high vascular resistance and elevated glomerular hydrostatic pressure."
       },
       {
-        q: "Which component of the filtration barrier acts as the primary molecular sieve stopping plasma proteins (>69,000 MW)?",
-        opts: [
-          "Capillary endothelium fenestrations",
+        q: "Which layer acts as the primary molecular sieve preventing plasma proteins (>69,000 MW) from entering filtrate?",
+        options: [
+          "Fenestrated capillary endothelium",
           "Basement membrane composed of collagen and negatively charged glycoproteins",
-          "Podocyte cell nuclei",
-          "Microvilli of the proximal tubule"
+          "Podocyte cell bodies",
+          "Ciliated brush border of the proximal convoluted tubule"
         ],
         ans: 1,
-        exp: "The basement membrane is a fine mesh of collagen and negatively charged glycoproteins that prevents large plasma proteins like albumin from entering Bowman's capsule."
+        rationale: "The basement membrane is a meshwork of collagen fibers and negatively charged glycoproteins that stops macromolecules and proteins over ~69 kDa."
       },
       {
-        q: "How is glucose selectively reabsorbed from the tubule lumen into proximal convoluted tubule epithelial cells?",
-        opts: [
-          "Simple diffusion through the phospholipid bilayer",
-          "Secondary active co-transport with sodium ions down the Na⁺ concentration gradient",
-          "Osmosis through aquaporin channels",
-          "Receptor-mediated endocytosis into vesicles"
+        q: "Why does glucose appear in the urine of an individual with uncontrolled diabetes mellitus?",
+        options: [
+          "The basement membrane breaks down, allowing excess glucose to enter filtrate",
+          "Blood glucose concentration exceeds the renal threshold, saturating Na⁺-glucose cotransporters in the PCT",
+          "The Loop of Henle fails to actively transport glucose into the medullary tissue fluid",
+          "Insufficient ADH is secreted to activate aquaporin channels for glucose reabsorption"
         ],
         ans: 1,
-        exp: "Sodium-potassium pumps pump Na⁺ into blood, keeping intracellular Na⁺ low. Na⁺ diffuses from tubule lumen into the cell through a cotransporter, dragging glucose with it."
+        rationale: "At high blood glucose levels, the filtered glucose load exceeds the transport maximum (renal threshold), saturating all available carrier proteins in the PCT."
       },
       {
-        q: "Why does glucose appear in the urine of an individual with untreated diabetes mellitus?",
-        opts: [
-          "The basement membrane of the glomerulus breaks down",
-          "Blood glucose concentration exceeds the renal threshold, saturating all proximal tubule cotransporter proteins",
-          "Insulin breaks down glucose inside the nephron",
-          "The Loop of Henle is impermeable to sugars"
+        q: "Which cellular adaptation is NOT characteristic of proximal convoluted tubule (PCT) epithelial cells?",
+        options: [
+          "Extensive apical microvilli forming a dense brush border",
+          "High density of mitochondria adjacent to the basolateral membrane",
+          "Co-transporter proteins for amino acids and glucose",
+          "Keratinised impermeable outer cuticles preventing water diffusion"
+        ],
+        ans: 3,
+        rationale: "PCT epithelial cells have permeable membranes with microvilli and dense mitochondria; they are never keratinised."
+      },
+      {
+        q: "How does the thick ascending limb of the Loop of Henle generate a hypertonic renal medulla?",
+        options: [
+          "It passively allows water to leave into the medullary tissue fluid",
+          "It actively pumps Na⁺ and Cl⁻ ions into interstitial fluid while being impermeable to water",
+          "It actively secretes urea into the collecting duct lumen",
+          "It transports potassium ions out while retaining all chloride ions"
         ],
         ans: 1,
-        exp: "When blood glucose exceeds ~10 mmol/L, all sodium-glucose cotransporter proteins (SGLT) in the PCT become saturated (Vmax), so excess glucose cannot be reabsorbed."
+        rationale: "The ascending limb actively transports Na⁺ and Cl⁻ out into the medulla using ATP and is impermeable to water, lowering interstitial water potential."
       },
       {
-        q: "Which physiological characteristic is correct for the thick ascending limb of the Loop of Henle?",
-        opts: [
-          "Highly permeable to water, impermeable to sodium ions",
-          "Impermeable to water, actively transports Na⁺ and Cl⁻ into the medullary tissue fluid",
-          "Reabsorbs 100% of filtered urea by facilitated diffusion",
-          "Contains podocytes with filtration slits"
+        q: "Why does the desert kangaroo rat have exceptionally long Loops of Henle extending deep into the medulla?",
+        options: [
+          "To allow faster filtration of toxic urea",
+          "To establish a steeper osmotic concentration gradient for maximal water reabsorption",
+          "To store large reserves of metabolic water inside the tubule lumen",
+          "To increase urine volume and rapidly remove excess mineral salts"
         ],
         ans: 1,
-        exp: "The thick ascending limb is impermeable to water. Active transport of Na⁺ and Cl⁻ out into the interstitial fluid builds up a hypertonic medulla."
+        rationale: "Longer Loops of Henle generate a much steeper and deeper hypertonic medullary gradient, enabling extreme water reabsorption."
       },
       {
-        q: "Compared to a human, the desert-dwelling Kangaroo Rat has which anatomical adaptation in its kidneys?",
-        opts: [
-          "Much shorter Loops of Henle and fewer collecting ducts",
-          "Significantly longer Loops of Henle extending deep into the medulla to create a steeper osmotic gradient",
-          "No glomeruli to prevent any filtration",
-          "A wider efferent arteriole to reduce pressure"
-        ],
-        ans: 1,
-        exp: "Long Loops of Henle establish a steep medullary osmotic concentration gradient, allowing maximum water reabsorption and the excretion of very concentrated urine."
-      },
-      {
-        q: "Where in the human body are the osmoreceptors that monitor blood plasma water potential located?",
-        opts: [
-          "Posterior pituitary gland",
+        q: "Where in the brain are osmoreceptors located that detect changes in blood water potential?",
+        options: [
+          "Medulla oblongata",
           "Hypothalamus",
-          "Adrenal cortex",
-          "Carotid sinus"
+          "Cerebellum",
+          "Anterior pituitary gland"
         ],
         ans: 1,
-        exp: "Osmoreceptor neurones are in the hypothalamus. When blood water potential falls, they lose water by osmosis, shrink, and trigger ADH release from the posterior pituitary."
+        rationale: "Osmoreceptor neurones are situated in the hypothalamus; they lose water and shrink when blood water potential falls."
       },
       {
-        q: "From where is Antidiuretic Hormone (ADH) released into the bloodstream?",
-        opts: [
-          "Anterior pituitary gland",
+        q: "From which endocrine gland is Antidiuretic Hormone (ADH) released into the circulation?",
+        options: [
           "Posterior pituitary gland",
-          "Renal medulla",
+          "Anterior pituitary gland",
+          "Adrenal cortex",
           "Thyroid gland"
         ],
-        ans: 1,
-        exp: "ADH is synthesized in neurosecretory cells of the hypothalamus and transported down axons to be stored in and released from the posterior pituitary gland."
+        ans: 0,
+        rationale: "ADH is synthesized in the hypothalamus and stored in neurosecretory terminals of the posterior pituitary gland, where it is released by exocytosis."
       },
       {
-        q: "What cellular second messenger pathway is initiated when ADH binds to V2 receptors on collecting duct cells?",
-        opts: [
-          "Inhibition of ATP synthesis in mitochondria",
-          "Activation of adenylate cyclase, increasing intracellular cyclic AMP (cAMP) to stimulate vesicle fusion",
-          "Direct synthesis of new collagen fibres",
-          "Opening of voltage-gated potassium channels"
-        ],
-        ans: 1,
-        exp: "ADH activates adenylate cyclase, converting ATP to cyclic AMP (cAMP). cAMP activates protein kinase A, triggering vesicles containing aquaporin-2 to fuse with the luminal membrane."
-      },
-      {
-        q: "What happens to the volume and concentration of urine when ADH levels in the blood are high?",
-        opts: [
-          "Large volume of dilute urine (hypotonic)",
-          "Small volume of concentrated urine (hypertonic)",
-          "Urine contains whole red blood cells",
-          "Urine flow stops completely"
-        ],
-        ans: 1,
-        exp: "High ADH increases collecting duct water permeability. Water leaves by osmosis into the hypertonic medulla, producing a small volume of concentrated urine."
-      },
-      {
-        q: "Which adaptation is visible in the epithelial cells lining the proximal convoluted tubule under an electron microscope?",
-        opts: [
-          "Thick myelin sheath and nodes of Ranvier",
-          "Dense microvilli brush border and abundant mitochondria",
-          "Ciliated flagella and mucus-secreting goblet cells",
-          "Absence of all cell surface transport proteins"
-        ],
-        ans: 1,
-        exp: "Microvilli provide a large surface area for cotransporters; numerous mitochondria generate ATP for active transport via Na⁺/K⁺ ATPase pumps."
-      },
-      {
-        q: "Why is countercurrent flow in the Loop of Henle biologically advantageous?",
-        opts: [
-          "It speeds up blood velocity through the kidney",
-          "It maintains a concentration gradient between tubule fluid and medullary fluid along the entire length",
-          "It stops all urea from entering the bladder",
-          "It prevents the kidney from using ATP"
-        ],
-        ans: 1,
-        exp: "Opposite flow directions prevent equilibrium, maintaining an osmotic gradient down the entire length of the loop."
-      },
-      {
-        q: "Which vessel removes reabsorbed water from the renal medulla without washing away the hypertonic salt gradient?",
-        opts: [
-          "Renal artery",
-          "Vasa recta capillaries",
-          "Hepatic portal vein",
-          "Pulmonary vein"
-        ],
-        ans: 1,
-        exp: "The hairpin countercurrent arrangement of the vasa recta capillaries allows them to carry reabsorbed water into the venous system without flushing out medullary solutes."
-      },
-      {
-        q: "In kidney failure, which toxic metabolic byproduct builds up in the blood, causing uremia?",
-        opts: [
-          "Glucose",
-          "Urea",
-          "Glycogen",
-          "Cellulose"
-        ],
-        ans: 1,
-        exp: "Urea, produced in the liver from the deamination of excess amino acids, accumulates when glomerular filtration rate drops, leading to toxic uremia."
-      },
-      {
-        q: "In haemodialysis, why must the dialysis fluid have the same glucose concentration as normal blood plasma?",
-        opts: [
-          "To force glucose into the patient by active transport",
-          "To prevent net loss or gain of glucose by facilitated diffusion",
-          "To kill harmful bacteria in the dialyser",
-          "To clot the blood in the artificial tubes"
-        ],
-        ans: 1,
-        exp: "An equal glucose concentration prevents net diffusion of glucose out of the patient's blood into the dialysate, preventing dangerous hypoglycemia."
-      },
-      {
-        q: "Why is heparin added to the patient's blood as it enters the haemodialysis machine?",
-        opts: [
-          "To speed up the removal of urea",
-          "To act as an anticoagulant and prevent blood clots in the dialysis tubing",
-          "To destroy red blood cells",
-          "To lower patient body temperature"
-        ],
-        ans: 1,
-        exp: "Heparin prevents clotting inside the artificial tubing of the dialyser. The effect is reversed before blood returns to the patient."
-      },
-      {
-        q: "What type of urine test uses monoclonal antibodies to diagnose early-stage human pregnancy?",
-        opts: [
-          "Testing for glucose using Benedict's solution",
-          "Testing for human Chorionic Gonadotrophin (hCG)",
-          "Testing for alcohol concentration",
-          "Testing for albumin protein using Biuret reagent"
-        ],
-        ans: 1,
-        exp: "Pregnancy test strips contain immobilised and free monoclonal antibodies bound to coloured beads that bind specifically to hCG hormone in urine."
-      },
-      {
-        q: "Which adaptation of podocytes allows efficient ultrafiltration?",
-        opts: [
-          "Interdigitating foot processes (pedicels) that form narrow filtration slits",
-          "Cilia that beat synchronously to propel fluid into the ureter",
-          "Complete absence of cell membranes",
-          "Thick walls of keratin to resist hydrostatic pressure"
+        q: "What intracellular secondary messenger mediates the cellular response to ADH in collecting duct principal cells?",
+        options: [
+          "Cyclic AMP (cAMP)",
+          "Acetylcholine",
+          "Inositol trisphosphate (IP3)",
+          "Glycogen"
         ],
         ans: 0,
-        exp: "Podocytes wrap around glomerular capillaries with foot processes (pedicels). The narrow gaps between them (filtration slits) allow small solutes to enter Bowman's capsule."
+        rationale: "ADH binds to V2 G-protein coupled receptors, activating adenylate cyclase to produce cyclic AMP (cAMP)."
       },
       {
-        q: "What is the immediate physiological response of the body when blood water potential increases (hyperhydration)?",
-        opts: [
-          "Osmoreceptors swell, reducing nerve impulses to the posterior pituitary so less ADH is released",
-          "Osmoreceptors shrink and trigger large surges of ADH",
-          "Collecting duct walls become completely permeable to urea",
-          "Blood pressure drops to zero"
-        ],
-        ans: 0,
-        exp: "High water potential causes hypothalamic osmoreceptors to gain water and swell. This inhibits ADH secretion, keeping collecting ducts impermeable to water so dilute urine is produced."
-      },
-      {
-        q: "Which substance is present in healthy glomerular filtrate but completely absent from the urine of a healthy person?",
-        opts: [
-          "Urea",
-          "Glucose",
-          "Sodium ions",
-          "Water"
+        q: "What cellular change occurs when ADH stimulates collecting duct epithelial cells?",
+        options: [
+          "Endocytosis of sodium-potassium ATPase pumps from the basolateral membrane",
+          "Vesicles containing aquaporin water channels fuse with the luminal (apical) membrane",
+          "Cellular tight junctions rupture to allow non-specific paracellular leakage",
+          "Mitochondria disintegrate to reduce active solute transport"
         ],
         ans: 1,
-        exp: "Glucose is small enough to pass into the filtrate during ultrafiltration, but 100% of it is reabsorbed in the proximal convoluted tubule."
+        rationale: "cAMP triggers an enzyme cascade causing intracellular vesicles containing aquaporin-2 water channels to exocytose into the apical luminal membrane."
+      },
+      {
+        q: "What type of urine is produced when a person is well-hydrated and blood ADH levels are very low?",
+        options: [
+          "A small volume of hypertonic, concentrated urine",
+          "A large volume of hypotonic, dilute urine",
+          "Urine containing high levels of glucose and serum proteins",
+          "Zero urine production due to cessation of ultrafiltration"
+        ],
+        ans: 1,
+        rationale: "Without ADH, collecting duct walls remain impermeable to water, so dilute fluid passes through without water reabsorption, producing copious dilute urine."
+      },
+      {
+        q: "How does fluid in the descending limb of the Loop of Henle change as it approaches the hairpin bend?",
+        options: [
+          "It becomes progressively more dilute because ions are actively reabsorbed",
+          "It becomes progressively more concentrated because water moves out by osmosis",
+          "Its volume increases due to active secretion of water into the tubule",
+          "Its solute concentration remains completely unchanged"
+        ],
+        ans: 1,
+        rationale: "The descending limb is permeable to water but impermeable to solutes; water leaves by osmosis into the hypertonic medulla, concentrating the filtrate."
+      },
+      {
+        q: "What prevents the blood flow through the vasa recta from washing away the medullary osmotic gradient?",
+        options: [
+          "Hairpin countercurrent loop architecture allowing solutes to enter and exit symmetrically",
+          "Complete absence of endothelium in medullary capillaries",
+          "Extremely high blood velocity preventing any solute diffusion",
+          "Active pumping of water directly into the renal pelvis"
+        ],
+        ans: 0,
+        rationale: "The hairpin countercurrent arrangement of the vasa recta ensures solutes entering on the descending side leave on the ascending side, preserving the gradient."
+      },
+      {
+        q: "What is the primary driving mechanism for selective reabsorption of amino acids in the PCT?",
+        options: [
+          "Simple passive diffusion down an amino acid concentration gradient",
+          "Secondary active co-transport driven by the basolateral sodium gradient",
+          "Bulk pinocytosis across the basement membrane",
+          "Aquaporin-mediated facilitated diffusion"
+        ],
+        ans: 1,
+        rationale: "Active extrusion of Na⁺ at the basolateral membrane lowers intracellular Na⁺, driving secondary active co-transport of amino acids across the apical membrane."
+      },
+      {
+        q: "Why do red blood cells not appear in glomerular filtrate in a healthy individual?",
+        options: [
+          "They are too large to pass through the fenestrations of the capillary endothelium",
+          "They are repelled by positive charges on podocyte foot processes",
+          "They are actively pumped backward by peritubular capillary sphincters",
+          "They are dissolved into amino acids before entering the glomerulus"
+        ],
+        ans: 0,
+        rationale: "Endothelial fenestrations are approximately 70–90 nm in diameter, retaining red blood cells (which are ~7,000 nm across)."
+      },
+      {
+        q: "Why does dialysis fluid (dialysate) flow in the opposite direction to blood in a haemodialysis machine?",
+        options: [
+          "To warm the blood to core body temperature faster",
+          "To maintain a concentration gradient along the entire length of the dialyser (countercurrent exchange)",
+          "To prevent red blood cells from clotting against the cellulose membrane",
+          "To force urea back into the arterial blood"
+        ],
+        ans: 1,
+        rationale: "Countercurrent flow maintains a continuous concentration gradient across the full exchange surface, preventing equilibrium."
+      },
+      {
+        q: "Why does fresh dialysis fluid contain the same glucose concentration as normal human blood plasma?",
+        options: [
+          "To supply the patient's red blood cells with extra respiratory substrate",
+          "To prevent net loss or gain of glucose by diffusion from the patient's blood",
+          "To stimulate insulin secretion inside the artificial kidney machine",
+          "To increase hydrostatic pressure inside the dialysis casing"
+        ],
+        ans: 1,
+        rationale: "Matching the physiological glucose concentration ensures there is no concentration gradient, preventing essential glucose from diffusing out of blood."
+      },
+      {
+        q: "Which substance undergoes the largest percentage reabsorption between filtrate formation and final urine excretion?",
+        options: [
+          "Urea",
+          "Glucose",
+          "Uric acid",
+          "Creatinine"
+        ],
+        ans: 1,
+        rationale: "In healthy kidneys, 100% of filtered glucose is selectively reabsorbed in the proximal convoluted tubule, resulting in 0% excretion."
+      },
+      {
+        q: "What term describes the specialised epithelial cells of the inner Bowman's capsule with interdigitating foot processes?",
+        options: [
+          "Podocytes",
+          "Hepatocytes",
+          "Enterocytes",
+          "Keratinocytes"
+        ],
+        ans: 0,
+        rationale: "Podocytes wrap pedicels around glomerular capillaries, leaving narrow filtration slits (~25–30 nm) that form the final filtration barrier."
+      },
+      {
+        q: "What is the net effect of drinking a large volume of pure water on the endocrine control of the kidney?",
+        options: [
+          "Osmoreceptors swell → decreased ADH release → fewer aquaporins in collecting duct → dilute urine",
+          "Osmoreceptors shrink → increased ADH release → more aquaporins in collecting duct → concentrated urine",
+          "Hypothalamus stimulates aldosterone secretion → increased sodium excretion",
+          "Glomerular hydrostatic pressure drops to zero → ultrafiltration ceases completely"
+        ],
+        ans: 0,
+        rationale: "Pure water raises blood water potential; hypothalamic osmoreceptors take up water and swell, decreasing ADH release from the posterior pituitary."
       }
     ];
 
-    let currentQuizIndex = 0;
-    let quizQuestionQueue = Array.from({ length: 20 }, (_, i) => i);
     let userMCQAnswers = {};
-    let missedQuestionsList = [];
-    let isRetestMode = false;
-    let isAnswerProcessing = false;
+    let activeMCQIndices = Array.from({ length: 20 }, (_, i) => i);
+    let currentActivePointer = 0;
+    let isMCQTransitioning = false;
 
     function renderMCQ20() {
-      const cardContainer = document.getElementById('tab4-single-card');
-      const summaryContainer = document.getElementById('tab4-summary');
-      if (!cardContainer || !summaryContainer) return;
+      const card = document.getElementById('tab4-single-card');
+      const summary = document.getElementById('tab4-summary');
+      if (!card || !summary) return;
 
-      const totalInQueue = quizQuestionQueue.length;
-      document.getElementById('tab4-total-q-num').textContent = totalInQueue;
-      document.getElementById('tab4-score').textContent = calculateCurrentMCQScore();
-
-      if (currentQuizIndex >= totalInQueue) {
-        cardContainer.classList.add('hidden');
-        summaryContainer.classList.remove('hidden');
-
-        const score = calculateCurrentMCQScore();
-        document.getElementById('tab4-final-score').textContent = score;
-        const fb = document.getElementById('tab4-summary-feedback');
-
-        if (score >= 17) fb.textContent = "Outstanding! Grade A* mastery of OCR kidney physiology.";
-        else if (score >= 13) fb.textContent = "Solid performance (Grade A/B standard). Retest your missed questions to consolidate.";
-        else fb.textContent = "Review ultrafiltration barriers and the counter-current multiplier, then retest.";
-
-        const retestBtn = document.getElementById('btn-retest-missed');
-        const retestCount = document.getElementById('retest-count');
-        if (missedQuestionsList.length > 0) {
-          retestBtn.classList.remove('hidden');
-          retestCount.textContent = missedQuestionsList.length;
-        } else {
-          retestBtn.classList.add('hidden');
-        }
+      if (currentActivePointer >= activeMCQIndices.length) {
+        showMCQSummary();
         return;
       }
 
-      cardContainer.classList.remove('hidden');
-      summaryContainer.classList.add('hidden');
+      card.classList.remove('hidden');
+      summary.classList.add('hidden');
 
-      const qRealIdx = quizQuestionQueue[currentQuizIndex];
-      const item = mcq20Data[qRealIdx];
-      const userSelected = userMCQAnswers[qRealIdx];
-      const isAnswered = userSelected !== undefined;
+      const qIndex = activeMCQIndices[currentActivePointer];
+      const qData = mcq20Data[qIndex];
+      const answered = userMCQAnswers[qIndex] !== undefined;
+      const userChoice = userMCQAnswers[qIndex];
 
-      document.getElementById('tab4-current-q-num').textContent = currentQuizIndex + 1;
-      const pct = Math.round(((currentQuizIndex) / totalInQueue) * 100);
-      document.getElementById('tab4-progress-bar').style.width = `${Math.max(5, pct)}%`;
+      document.getElementById('tab4-current-q-num').textContent = currentActivePointer + 1;
+      document.getElementById('tab4-total-q-num').textContent = activeMCQIndices.length;
 
-      let optionsHtml = '';
-      item.opts.forEach((opt, optIdx) => {
-        let btnClass = "border-slate-200 bg-white hover:border-sky-400 text-slate-800";
-        let badge = `<span class="w-5 h-5 rounded-full border border-slate-300 text-[10px] flex items-center justify-center font-bold text-slate-500">${String.fromCharCode(65 + optIdx)}</span>`;
+      const progressPct = ((currentActivePointer + 1) / activeMCQIndices.length) * 100;
+      document.getElementById('tab4-progress-bar').style.width = `${progressPct}%`;
 
-        if (isAnswered) {
-          if (optIdx === item.ans) {
-            btnClass = "border-emerald-500 bg-emerald-100 text-emerald-950 font-bold ring-2 ring-emerald-400";
-            badge = `<span class="w-5 h-5 rounded-full bg-emerald-600 text-[10px] flex items-center justify-center font-bold text-white">✓</span>`;
-          } else if (optIdx === userSelected) {
-            btnClass = "border-rose-400 bg-rose-100 text-rose-950 font-semibold";
-            badge = `<span class="w-5 h-5 rounded-full bg-rose-600 text-[10px] flex items-center justify-center font-bold text-white">✗</span>`;
+      let scoreCount = 0;
+      Object.keys(userMCQAnswers).forEach(k => {
+        if (userMCQAnswers[k] === mcq20Data[k].ans) scoreCount++;
+      });
+      document.getElementById('tab4-score').textContent = scoreCount;
+
+      let optionsHTML = '';
+      qData.options.forEach((opt, oIdx) => {
+        let optStyle = "border-slate-200 bg-white hover:bg-sky-50 hover:border-sky-300 text-slate-800";
+        let letterBadge = `<span class="w-5 h-5 rounded bg-slate-100 text-slate-700 font-mono font-bold flex items-center justify-center shrink-0 text-xs">${String.fromCharCode(65 + oIdx)}</span>`;
+
+        if (answered) {
+          if (oIdx === qData.ans) {
+            optStyle = "border-emerald-400 bg-emerald-50 text-emerald-950 font-bold ring-2 ring-emerald-300";
+            letterBadge = `<span class="w-5 h-5 rounded bg-emerald-600 text-white font-mono font-bold flex items-center justify-center shrink-0 text-xs">✓</span>`;
+          } else if (oIdx === userChoice) {
+            optStyle = "border-rose-400 bg-rose-50 text-rose-950 font-semibold ring-2 ring-rose-300";
+            letterBadge = `<span class="w-5 h-5 rounded bg-rose-600 text-white font-mono font-bold flex items-center justify-center shrink-0 text-xs">✗</span>`;
           } else {
-            btnClass = "opacity-40 border-slate-200 bg-slate-50";
+            optStyle = "border-slate-200 bg-slate-50 text-slate-400 opacity-60";
           }
         }
 
-        optionsHtml += `
-          <button onclick="handleMCQClick(${qRealIdx}, ${optIdx})" ${isAnswered ? 'disabled' : ''} class="w-full text-left p-2.5 rounded-xl border text-xs sm:text-sm transition flex items-center gap-2.5 ${btnClass} cursor-pointer shadow-2xs">
-            ${badge}
-            <span class="leading-snug">${opt}</span>
+        optionsHTML += `
+          <button onclick="handleMCQChoice(${oIdx})" ${answered ? 'disabled' : ''} class="w-full text-left p-2.5 rounded-xl border text-xs transition cursor-pointer flex items-center gap-2.5 shadow-2xs ${optStyle}">
+            ${letterBadge}
+            <span class="leading-relaxed flex-grow text-xs sm:text-sm">${opt}</span>
           </button>
         `;
       });
 
-      cardContainer.innerHTML = `
-        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col justify-between">
+      let rationaleHTML = '';
+      if (answered) {
+        const wasCorrect = (userChoice === qData.ans);
+        rationaleHTML = `
+          <div class="mt-2.5 p-2 rounded-lg text-xs leading-snug border ${wasCorrect ? 'bg-emerald-50 text-emerald-900 border-emerald-300' : 'bg-rose-50 text-rose-900 border-rose-300'} animate-fade-in">
+            <strong>${wasCorrect ? '✓ Correct!' : '✗ Incorrect:'}</strong> ${qData.rationale}
+          </div>
+        `;
+      }
+
+      card.innerHTML = `
+        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex flex-col justify-between shadow-xs">
           <div>
-            <div class="flex items-center justify-between text-[11px] font-semibold text-slate-400 pb-1 mb-2 border-b border-slate-200">
-              <span>Question ${currentQuizIndex + 1} of ${totalInQueue}</span>
-              <span>OCR Specification 5.1.4</span>
-            </div>
-            <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug mb-3">
-              ${item.q}
+            <span class="text-[10px] font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded uppercase tracking-wider">
+              Question ${currentActivePointer + 1} of ${activeMCQIndices.length}
+            </span>
+            <h3 class="text-sm sm:text-base font-bold text-slate-900 mt-2 mb-3 leading-snug">
+              ${qData.q}
             </h3>
             <div class="space-y-2">
-              ${optionsHtml}
+              ${optionsHTML}
             </div>
           </div>
-          ${isAnswered ? `
-            <div class="mt-3 p-2 rounded-xl bg-sky-50 border border-sky-200 text-xs text-sky-950">
-              <strong>OCR Explanation:</strong> ${item.exp}
-            </div>
-          ` : ''}
+          ${rationaleHTML}
         </div>
       `;
     }
 
-    function handleMCQClick(qRealIdx, optIdx) {
-      if (isAnswerProcessing) return;
-      isAnswerProcessing = true;
-      userMCQAnswers[qRealIdx] = optIdx;
+    function handleMCQChoice(oIdx) {
+      if (isMCQTransitioning) return;
+      const qIndex = activeMCQIndices[currentActivePointer];
+      if (userMCQAnswers[qIndex] !== undefined) return;
 
-      if (optIdx !== mcq20Data[qRealIdx].ans) {
-        if (!missedQuestionsList.includes(qRealIdx)) {
-          missedQuestionsList.push(qRealIdx);
-        }
-      } else {
-        missedQuestionsList = missedQuestionsList.filter(idx => idx !== qRealIdx);
-      }
-
+      userMCQAnswers[qIndex] = oIdx;
+      isMCQTransitioning = true;
       renderMCQ20();
 
       setTimeout(() => {
-        currentQuizIndex++;
-        isAnswerProcessing = false;
+        currentActivePointer++;
+        isMCQTransitioning = false;
         renderMCQ20();
       }, 1400);
     }
 
-    function calculateCurrentMCQScore() {
-      let score = 0;
-      Object.keys(userMCQAnswers).forEach(idx => {
-        const qInt = parseInt(idx, 10);
-        if (userMCQAnswers[qInt] === mcq20Data[qInt].ans) score++;
+    function showMCQSummary() {
+      const card = document.getElementById('tab4-single-card');
+      const summary = document.getElementById('tab4-summary');
+      if (card) card.classList.add('hidden');
+      if (summary) summary.classList.remove('hidden');
+
+      let scoreCount = 0;
+      let missedIndices = [];
+      activeMCQIndices.forEach(idx => {
+        if (userMCQAnswers[idx] === mcq20Data[idx].ans) {
+          scoreCount++;
+        } else {
+          missedIndices.push(idx);
+        }
       });
-      return score;
+
+      document.getElementById('tab4-final-score').textContent = scoreCount;
+      const feedback = document.getElementById('tab4-summary-feedback');
+      const retestBtn = document.getElementById('btn-retest-missed');
+      const retestCount = document.getElementById('retest-count');
+
+      if (missedIndices.length > 0) {
+        feedback.textContent = `You scored ${scoreCount} out of ${activeMCQIndices.length}. Click below to re-test the ${missedIndices.length} missed question(s).`;
+        retestBtn.classList.remove('hidden');
+        retestCount.textContent = missedIndices.length;
+      } else {
+        feedback.textContent = `Outstanding! Perfect score (${scoreCount}/${activeMCQIndices.length}) achieved!`;
+        retestBtn.classList.add('hidden');
+      }
     }
 
     function retestMissedQuestions() {
-      if (missedQuestionsList.length === 0) {
-        showToast("No missed questions to retest! Great job!", "bg-emerald-600");
-        return;
-      }
-      isRetestMode = true;
-      quizQuestionQueue = [...missedQuestionsList];
-      quizQuestionQueue.forEach(idx => delete userMCQAnswers[idx]);
-      currentQuizIndex = 0;
-      document.getElementById('tab4-mode-indicator').textContent = `Retesting ${quizQuestionQueue.length} Missed`;
+      const missed = activeMCQIndices.filter(idx => userMCQAnswers[idx] !== mcq20Data[idx].ans);
+      if (missed.length === 0) return;
+
+      missed.forEach(idx => delete userMCQAnswers[idx]);
+      activeMCQIndices = missed;
+      currentActivePointer = 0;
+      isMCQTransitioning = false;
+      document.getElementById('tab4-mode-indicator').textContent = `Retesting ${missed.length} Missed Questions`;
       renderMCQ20();
-      showToast(`Retesting ${quizQuestionQueue.length} missed question(s)!`, "bg-amber-600");
     }
 
     function resetMCQ20() {
       userMCQAnswers = {};
-      missedQuestionsList = [];
-      isRetestMode = false;
-      quizQuestionQueue = Array.from({ length: 20 }, (_, i) => i);
-      currentQuizIndex = 0;
-      isAnswerProcessing = false;
-      document.getElementById('tab4-mode-indicator').textContent = 'Standard Mode';
+      activeMCQIndices = Array.from({ length: 20 }, (_, i) => i);
+      currentActivePointer = 0;
+      isMCQTransitioning = false;
+      document.getElementById('tab4-mode-indicator').textContent = "Standard Mode (20 Questions)";
       renderMCQ20();
-      showToast("MCQ Quiz restarted!", "bg-slate-700");
+      showToast("MCQ Quiz reset!", "bg-slate-700");
     }
 
     /* ==================================================== */
-    /* TAB 5: ADH FLOWCHART (UNNUMBERED CHRONOLOGICAL)      */
+    /* TOUCH-DRAG REORDERING SYSTEM FOR TABS 5 & 6          */
+    /* ==================================================== */
+    let touchDragSourceList = null;
+    let touchDragSourceIndex = -1;
+    let touchDragOverIndex = -1;
+
+    function initTouchDrag(element, listType, index) {
+      element.addEventListener('touchstart', (e) => handleTouchStart(e, listType, index), { passive: false });
+      element.addEventListener('touchmove', (e) => handleTouchMove(e, listType), { passive: false });
+      element.addEventListener('touchend', (e) => handleTouchEnd(e, listType), { passive: false });
+
+      // HTML5 desktop drag fallback
+      element.setAttribute('draggable', 'true');
+      element.addEventListener('dragstart', (e) => {
+        touchDragSourceList = listType;
+        touchDragSourceIndex = index;
+        e.dataTransfer.effectAllowed = 'move';
+        element.classList.add('dragging-card');
+      });
+      element.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      });
+      element.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (touchDragSourceList === listType && touchDragSourceIndex !== index) {
+          reorderArrayItems(listType, touchDragSourceIndex, index);
+        }
+      });
+      element.addEventListener('dragend', () => {
+        element.classList.remove('dragging-card');
+        touchDragSourceList = null;
+        touchDragSourceIndex = -1;
+      });
+    }
+
+    function handleTouchStart(e, listType, index) {
+      touchDragSourceList = listType;
+      touchDragSourceIndex = index;
+      touchDragOverIndex = index;
+      const target = e.currentTarget;
+      target.classList.add('dragging-card');
+    }
+
+    function handleTouchMove(e, listType) {
+      if (touchDragSourceList !== listType) return;
+      e.preventDefault(); // Stop screen scrolling while dragging sentence with finger
+      const touch = e.touches[0];
+      const elemUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (!elemUnder) return;
+      const card = elemUnder.closest('[data-drag-index]');
+      if (card && card.dataset.listType === listType) {
+        touchDragOverIndex = parseInt(card.dataset.dragIndex, 10);
+      }
+    }
+
+    function handleTouchEnd(e, listType) {
+      const target = e.currentTarget;
+      target.classList.remove('dragging-card');
+      if (touchDragSourceList === listType && touchDragOverIndex !== -1 && touchDragSourceIndex !== -1 && touchDragSourceIndex !== touchDragOverIndex) {
+        reorderArrayItems(listType, touchDragSourceIndex, touchDragOverIndex);
+      }
+      touchDragSourceList = null;
+      touchDragSourceIndex = -1;
+      touchDragOverIndex = -1;
+    }
+
+    function reorderArrayItems(listType, fromIdx, toIdx) {
+      if (listType === 'adh') {
+        const item = currentADHList.splice(fromIdx, 1)[0];
+        currentADHList.splice(toIdx, 0, item);
+        renderADHSequence();
+      } else if (listType === 'dialysis') {
+        const item = currentDialysisList.splice(fromIdx, 1)[0];
+        currentDialysisList.splice(toIdx, 0, item);
+        renderDialysisSequence();
+      }
+    }
+
+    /* ==================================================== */
+    /* TAB 5: ADH FLOWCHART (TOUCH & DRAG WITH FINGER)      */
     /* ==================================================== */
     const originalADHSteps = [
       { order: 1, text: "Water loss or excessive sweating causes a fall in the water potential of blood plasma." },
@@ -1749,19 +1856,22 @@
 
       currentADHList.forEach((item, idx) => {
         const row = document.createElement('div');
-        row.className = "px-2 py-1 rounded-lg border border-slate-200 bg-white shadow-2xs flex items-center justify-between gap-1.5 text-xs flex-grow";
+        row.className = "px-2 py-1.5 rounded-lg border border-slate-200 bg-white shadow-2xs flex items-center justify-between gap-1.5 text-xs flex-grow touch-draggable transition-transform";
+        row.dataset.dragIndex = idx;
+        row.dataset.listType = 'adh';
         row.innerHTML = `
-          <div class="flex items-center gap-1.5 flex-grow">
-            <span class="w-4 h-4 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 font-bold flex items-center justify-center shrink-0 text-[10px]">
-              ●
+          <div class="flex items-center gap-1.5 flex-grow pointer-events-none">
+            <span class="w-5 h-5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-800 font-bold flex items-center justify-center shrink-0 text-[10px]">
+              ☰
             </span>
             <p class="text-slate-800 leading-tight text-[10px] sm:text-[11px]">${item.text}</p>
           </div>
-          <div class="flex flex-col gap-0.5 shrink-0">
-            <button onclick="moveADHItem(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="w-5 h-3.5 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-20 text-slate-700 font-bold text-[8px] flex items-center justify-center cursor-pointer">▲</button>
-            <button onclick="moveADHItem(${idx}, 1)" ${idx === currentADHList.length - 1 ? 'disabled' : ''} class="w-5 h-3.5 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-20 text-slate-700 font-bold text-[8px] flex items-center justify-center cursor-pointer">▼</button>
+          <div class="flex flex-col gap-0.5 shrink-0 opacity-40 hover:opacity-100">
+            <button onclick="moveADHItem(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="w-5 h-3 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-20 text-slate-700 font-bold text-[8px] flex items-center justify-center cursor-pointer">▲</button>
+            <button onclick="moveADHItem(${idx}, 1)" ${idx === currentADHList.length - 1 ? 'disabled' : ''} class="w-5 h-3 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-20 text-slate-700 font-bold text-[8px] flex items-center justify-center cursor-pointer">▼</button>
           </div>
         `;
+        initTouchDrag(row, 'adh', idx);
         container.appendChild(row);
       });
     }
@@ -1795,7 +1905,7 @@
       } else {
         fb.className = "mt-1 p-1.5 rounded-lg text-xs font-bold border border-amber-300 bg-amber-50 text-amber-900";
         fb.innerHTML = `⚠️ ${correctCount}/8 steps in correct position. Check brain detection vs cellular cascade response.`;
-        showToast("Keep adjusting sentence order!", "bg-amber-600");
+        showToast("Drag sentences to adjust order!", "bg-amber-600");
       }
     }
 
@@ -1809,7 +1919,7 @@
     }
 
     /* ==================================================== */
-    /* TAB 6: DIALYSIS (SENTENCES ON TOP, NO NUMBERS)       */
+    /* TAB 6: DIALYSIS (TOUCH & DRAG WITH FINGER)           */
     /* ==================================================== */
     const originalDialysisSteps = [
       { order: 1, text: "Blood carrying a high concentration of urea leaves the patient's arterial circulation, and heparin anticoagulant is added." },
@@ -1837,19 +1947,22 @@
 
       currentDialysisList.forEach((item, idx) => {
         const row = document.createElement('div');
-        row.className = "px-2 py-1 rounded-lg border border-slate-200 bg-white shadow-2xs flex items-center justify-between gap-1.5 text-xs flex-grow";
+        row.className = "px-2 py-1.5 rounded-lg border border-slate-200 bg-white shadow-2xs flex items-center justify-between gap-1.5 text-xs flex-grow touch-draggable transition-transform";
+        row.dataset.dragIndex = idx;
+        row.dataset.listType = 'dialysis';
         row.innerHTML = `
-          <div class="flex items-center gap-1.5 flex-grow">
-            <span class="w-4 h-4 rounded-full bg-teal-50 border border-teal-200 text-teal-800 font-bold flex items-center justify-center shrink-0 text-[10px]">
-              ●
+          <div class="flex items-center gap-1.5 flex-grow pointer-events-none">
+            <span class="w-5 h-5 rounded-md bg-teal-50 border border-teal-200 text-teal-800 font-bold flex items-center justify-center shrink-0 text-[10px]">
+              ☰
             </span>
             <p class="text-slate-800 leading-tight text-[10px] sm:text-[11px]">${item.text}</p>
           </div>
-          <div class="flex flex-col gap-0.5 shrink-0">
-            <button onclick="moveDialysisItem(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="w-5 h-3.5 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-20 text-slate-700 font-bold text-[8px] flex items-center justify-center cursor-pointer">▲</button>
-            <button onclick="moveDialysisItem(${idx}, 1)" ${idx === currentDialysisList.length - 1 ? 'disabled' : ''} class="w-5 h-3.5 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-20 text-slate-700 font-bold text-[8px] flex items-center justify-center cursor-pointer">▼</button>
+          <div class="flex flex-col gap-0.5 shrink-0 opacity-40 hover:opacity-100">
+            <button onclick="moveDialysisItem(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="w-5 h-3 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-20 text-slate-700 font-bold text-[8px] flex items-center justify-center cursor-pointer">▲</button>
+            <button onclick="moveDialysisItem(${idx}, 1)" ${idx === currentDialysisList.length - 1 ? 'disabled' : ''} class="w-5 h-3 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-20 text-slate-700 font-bold text-[8px] flex items-center justify-center cursor-pointer">▼</button>
           </div>
         `;
+        initTouchDrag(row, 'dialysis', idx);
         container.appendChild(row);
       });
     }
@@ -1883,7 +1996,7 @@
       } else {
         fb.className = "mt-1 p-1.5 rounded-lg text-xs font-bold border border-amber-300 bg-amber-50 text-amber-900";
         fb.innerHTML = `⚠️ ${correctCount}/6 sentences in correct sequence. Check blood entry vs return.`;
-        showToast("Adjust sentence order!", "bg-amber-600");
+        showToast("Drag sentences to adjust order!", "bg-amber-600");
       }
     }
 
@@ -1897,7 +2010,7 @@
     }
 
     /* ==================================================== */
-    /* TAB 7: 3 OCR 6-MARK QUESTIONS & AUTHENTIC MODELS     */
+    /* TAB 7: 3 OCR 6-MARK QUESTIONS (18 MARKS TOTAL)       */
     /* ==================================================== */
     const tab7Questions = {
       1: {
@@ -1963,17 +2076,22 @@
     };
 
     let currentTab7QId = 1;
-    let tab7Score = 0;
+    let tab7Answers = { 1: '', 2: '', 3: '' };
+    let tab7Scores = { 1: 0, 2: 0, 3: 0 };
+    let tab7Evaluated = { 1: false, 2: false, 3: false };
 
     function loadTab7Question(qNum) {
+      // Save current input before switching
+      tab7Answers[currentTab7QId] = document.getElementById('tab7-student-answer').value;
+
       currentTab7QId = qNum;
       [1, 2, 3].forEach(n => {
         const btn = document.getElementById(`tab7-qbtn-${n}`);
         if (btn) {
           if (n === qNum) {
-            btn.className = "px-2.5 py-0.5 rounded text-xs font-bold bg-indigo-600 text-white shadow-xs cursor-pointer";
+            btn.className = "px-2 py-0.5 rounded text-xs font-bold bg-indigo-600 text-white shadow-xs cursor-pointer flex items-center gap-1";
           } else {
-            btn.className = "px-2.5 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer";
+            btn.className = "px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer flex items-center gap-1";
           }
         }
       });
@@ -1981,13 +2099,21 @@
       const qData = tab7Questions[qNum];
       document.getElementById('tab7-q-category').textContent = qData.category;
       document.getElementById('tab7-prompt-text').textContent = qData.prompt;
-      document.getElementById('tab7-student-answer').value = '';
+      document.getElementById('tab7-student-answer').value = tab7Answers[qNum] || '';
       
       const modelsSec = document.getElementById('tab7-models-section');
       const placeholder = document.getElementById('tab7-models-placeholder');
-      if (modelsSec) modelsSec.classList.add('hidden');
-      if (placeholder) placeholder.classList.remove('hidden');
 
+      if (tab7Evaluated[qNum]) {
+        if (modelsSec) modelsSec.classList.remove('hidden');
+        if (placeholder) placeholder.classList.add('hidden');
+        populateModelTexts(qData);
+      } else {
+        if (modelsSec) modelsSec.classList.add('hidden');
+        if (placeholder) placeholder.classList.remove('hidden');
+      }
+
+      document.getElementById('tab7-current-mark-display').textContent = `Mark: ${tab7Scores[qNum]} / 6`;
       renderTab7Keywords();
       analyzeTab7Text();
     }
@@ -2011,6 +2137,7 @@
 
     function analyzeTab7Text() {
       const text = document.getElementById('tab7-student-answer').value;
+      tab7Answers[currentTab7QId] = text;
       const words = text.trim().length > 0 ? text.trim().split(/\s+/).length : 0;
       document.getElementById('tab7-word-count').textContent = `${words} words`;
 
@@ -2046,36 +2173,60 @@
       }
     }
 
-    function evaluateAndShowModels() {
-      const qData = tab7Questions[currentTab7QId];
-      const text = document.getElementById('tab7-student-answer').value;
-      let matches = 0;
-      qData.terms.forEach(t => {
-        if (t.regex.test(text)) matches++;
-      });
-
-      if (matches >= 6) tab7Score = 6;
-      else if (matches >= 4) tab7Score = 4;
-      else if (matches >= 2) tab7Score = 2;
-      else tab7Score = 1;
-
+    function populateModelTexts(qData) {
       document.getElementById('model-high-text').textContent = qData.highModel;
       document.getElementById('model-high-commentary').textContent = qData.highComm;
       document.getElementById('model-med-text').textContent = qData.medModel;
       document.getElementById('model-med-commentary').textContent = qData.medComm;
       document.getElementById('model-low-text').textContent = qData.lowModel;
       document.getElementById('model-low-commentary').textContent = qData.lowComm;
+    }
+
+    function evaluateAndShowModels() {
+      const qData = tab7Questions[currentTab7QId];
+      const text = document.getElementById('tab7-student-answer').value;
+      tab7Answers[currentTab7QId] = text;
+      let matches = 0;
+      qData.terms.forEach(t => {
+        if (t.regex.test(text)) matches++;
+      });
+
+      let awarded = 1;
+      if (matches >= 6) awarded = 6;
+      else if (matches >= 4) awarded = 4;
+      else if (matches >= 2) awarded = 2;
+      else awarded = text.trim().length > 15 ? 1 : 0;
+
+      tab7Scores[currentTab7QId] = awarded;
+      tab7Evaluated[currentTab7QId] = true;
+
+      document.getElementById('tab7-current-mark-display').textContent = `Mark: ${awarded} / 6`;
+      const badge = document.getElementById(`tab7-badge-${currentTab7QId}`);
+      if (badge) badge.textContent = `(${awarded}/6)`;
+
+      populateModelTexts(qData);
 
       const modelsSec = document.getElementById('tab7-models-section');
       const placeholder = document.getElementById('tab7-models-placeholder');
       if (modelsSec) modelsSec.classList.remove('hidden');
       if (placeholder) placeholder.classList.add('hidden');
 
-      showToast(`Evaluated! Awarded ${tab7Score}/6 marks based on keyword coverage`, "bg-indigo-600");
+      const totalTab7 = (tab7Scores[1] || 0) + (tab7Scores[2] || 0) + (tab7Scores[3] || 0);
+      showToast(`Q${currentTab7QId} Evaluated: ${awarded}/6 marks (Total Tab 7: ${totalTab7}/18)`, "bg-indigo-600");
     }
 
     function clearTab7Answer() {
       document.getElementById('tab7-student-answer').value = '';
+      tab7Answers[currentTab7QId] = '';
+      tab7Scores[currentTab7QId] = 0;
+      tab7Evaluated[currentTab7QId] = false;
+      document.getElementById('tab7-current-mark-display').textContent = 'Mark: 0 / 6';
+      const badge = document.getElementById(`tab7-badge-${currentTab7QId}`);
+      if (badge) badge.textContent = '(0/6)';
+      const modelsSec = document.getElementById('tab7-models-section');
+      const placeholder = document.getElementById('tab7-models-placeholder');
+      if (modelsSec) modelsSec.classList.add('hidden');
+      if (placeholder) placeholder.classList.remove('hidden');
       analyzeTab7Text();
     }
 
