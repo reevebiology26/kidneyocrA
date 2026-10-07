@@ -975,11 +975,8 @@
             circ.setAttribute('stroke', '#34d399');
             circ.setAttribute('stroke-dasharray', 'none');
             txt.setAttribute('fill', '#ffffff');
-          } else if (selectedTab1LabelId === pinKey) {
-            circ.setAttribute('fill', '#d97706');
-            circ.setAttribute('stroke', '#fef08a');
-            txt.setAttribute('fill', '#ffffff');
           } else {
+            // Keep all unplaced pins completely neutral so selecting a label gives nothing away
             circ.setAttribute('fill', '#1e293b');
             circ.setAttribute('stroke', '#94a3b8');
             circ.setAttribute('stroke-dasharray', '3,3');
@@ -995,7 +992,7 @@
       if (status) {
         if (selectedTab1LabelId) {
           const sel = tab1Labels.find(l => l.id === selectedTab1LabelId);
-          status.textContent = `● Selected: "${sel ? sel.name : ''}" - Now tap its letter circle pin!`;
+          status.textContent = `● Selected: "${sel ? sel.name : ''}" - Now tap which pin (A–G) marks this structure!`;
           status.className = "text-amber-400 font-bold";
         } else {
           status.textContent = "● Tap a label on right, then tap letter circle A–G";
