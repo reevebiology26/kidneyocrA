@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OCR A-Level Biology: Kidney Physiology & Osmoregulation</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -72,8 +73,12 @@
           </div>
         </div>
 
-        <!-- Right: Screen Shot Score Button -->
-        <div class="flex items-center gap-2">
+        <!-- Right: Streak Display & Screen Shot Score Button -->
+        <div class="flex items-center gap-3">
+          <div id="top-streak-display" class="hidden items-center gap-1.5 px-3 py-0.5 bg-gradient-to-r from-orange-500 to-red-600 text-white font-black text-xs sm:text-sm rounded-lg shadow-[0_0_10px_rgba(249,115,22,0.8)] border border-orange-300 transition-all duration-300 transform scale-95 opacity-0">
+            <span>🔥 Streak:</span>
+            <span id="streak-counter-val" class="text-base sm:text-lg drop-shadow-md">0</span>
+          </div>
           <button onclick="promptAndOpenScorecard()" class="px-2.5 py-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-[11px] sm:text-xs rounded-lg shadow border border-amber-300 flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
             <span>📸</span>
             <span class="whitespace-nowrap">Screenshot Score</span>
@@ -81,7 +86,7 @@
         </div>
       </div>
 
-      <!-- Top Tabs (All 7 visible without clipping) -->
+      <!-- Top Tabs -->
       <nav class="flex items-center justify-between gap-1 mt-1 pt-0.5 border-t border-slate-800 text-[10px] sm:text-[11px] font-semibold text-slate-300 overflow-x-auto no-scrollbar">
         <button onclick="switchTab('tab1')" id="btn-tab1" class="tab-btn flex-1 min-w-[85px] py-1 px-1 text-center rounded-t-lg transition border-b-2 border-teal-400 text-teal-300 bg-slate-800/80 font-bold">
           1. Structure Label
@@ -132,10 +137,9 @@
           </div>
         </div>
 
-        <!-- 1-Screen Side-by-Side: Diagram Left, Labels Bank Right -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-2 mt-1 flex-grow items-stretch overflow-hidden">
           
-          <!-- Diagram (lg:col-span-8) -->
+          <!-- Diagram -->
           <div class="lg:col-span-8 bg-slate-950 rounded-xl p-2 border border-slate-800 flex flex-col justify-between items-center text-white relative">
             <div class="w-full flex items-center justify-between text-[10px] text-slate-400 font-mono px-1">
               <span class="text-teal-400 font-semibold" id="tab1-selection-status">● Tap a label on right, then tap letter circle A–G</span>
@@ -216,7 +220,7 @@
             </div>
           </div>
 
-          <!-- Labels Bank on RIGHT (lg:col-span-4) -->
+          <!-- Labels Bank on RIGHT -->
           <div class="lg:col-span-4 flex flex-col justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200">
             <div>
               <div class="flex items-center justify-between pb-1.5 border-b border-slate-200 mb-1">
@@ -324,6 +328,7 @@
           </div>
 
           <!-- Shuffled Events on RIGHT (lg:col-span-7) -->
+          <!-- We now use generous padding and text sizing to fill out the page better -->
           <div class="lg:col-span-7 flex flex-col justify-between gap-1.5 overflow-hidden" id="tab2-function-slots"></div>
 
         </div>
@@ -357,7 +362,7 @@
         <!-- 1-Screen Side-by-Side: Molecules Left, Details Right -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-2 mt-1 flex-grow items-stretch overflow-hidden">
           
-          <!-- Left: Molecule Cards Bank (lg:col-span-4) -->
+          <!-- Left: Molecule Cards Bank -->
           <div class="lg:col-span-4 bg-slate-50 p-2 rounded-xl border border-slate-200 flex flex-col justify-between overflow-hidden">
             <div>
               <div class="flex items-center justify-between pb-1 border-b border-slate-200 mb-1">
@@ -371,7 +376,7 @@
             </div>
           </div>
 
-          <!-- Right: Destination, Location & Conditions Target Cards (lg:col-span-8) -->
+          <!-- Right: Destination, Location & Conditions Target Cards -->
           <div class="lg:col-span-8 flex flex-col justify-between gap-1 overflow-hidden" id="tab3-targets-container"></div>
 
         </div>
@@ -432,7 +437,7 @@
 
         <!-- Footer Notice -->
         <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-100 shrink-0">
-          <span>Instant validation: Click an option to see immediate rationale; advances automatically.</span>
+          <span>Instant validation with voice cues: Auto-advances in 1.8 seconds.</span>
           <span id="tab4-mode-indicator" class="font-semibold text-slate-500">Standard Mode</span>
         </div>
 
@@ -478,7 +483,7 @@
     </section>
 
     <!-- ======================================================== -->
-    <!-- TAB 6: DIALYSIS (SENTENCES ON TOP, DIAGRAM BELOW)        -->
+    <!-- TAB 6: DIALYSIS (LARGE SENTENCES, NO DIAGRAM)            -->
     <!-- ======================================================== -->
     <section id="tab6" class="tab-pane hidden h-full flex flex-col">
       <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-2 flex flex-col h-full justify-between overflow-hidden">
@@ -506,15 +511,15 @@
 
         <!-- 1. SENTENCES TASK (ALL 6 VISIBLE ON ONE SCREEN) -->
         <div class="flex flex-col flex-grow justify-between overflow-hidden">
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] font-bold text-slate-800 uppercase tracking-wider">
+          <div class="flex items-center justify-between mt-2">
+            <span class="text-[11px] sm:text-xs font-bold text-slate-800 uppercase tracking-wider">
               1. Drag with your finger to reorder stages of haemodialysis:
             </span>
           </div>
 
-          <div id="dialysis-sentences-container" class="flex flex-col justify-between gap-1.5 flex-grow overflow-hidden my-1 select-none"></div>
+          <div id="dialysis-sentences-container" class="flex flex-col justify-between gap-2 flex-grow overflow-hidden my-2 select-none"></div>
 
-          <div id="dialysis-feedback" class="hidden p-1.5 rounded-lg text-xs font-bold border shrink-0"></div>
+          <div id="dialysis-feedback" class="hidden p-2 rounded-lg text-sm font-bold border shrink-0"></div>
         </div>
 
       </div>
@@ -735,6 +740,71 @@
     /* ==================================================== */
     let currentTabId = 'tab1';
     let studentCandidateName = "";
+    let currentStreak = 0;
+
+    function updateStreakDisplay() {
+      const streakEl = document.getElementById('top-streak-display');
+      const valEl = document.getElementById('streak-counter-val');
+      if (!streakEl || !valEl) return;
+      
+      if (currentStreak >= 2) {
+        streakEl.classList.remove('hidden');
+        setTimeout(() => {
+          streakEl.classList.remove('scale-95', 'opacity-0');
+          streakEl.classList.add('scale-100', 'opacity-100');
+        }, 10);
+        valEl.textContent = currentStreak;
+        
+        streakEl.classList.remove('animate-pulse');
+        void streakEl.offsetWidth; 
+        streakEl.classList.add('animate-pulse');
+      } else {
+        streakEl.classList.remove('scale-100', 'opacity-100', 'animate-pulse');
+        streakEl.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+          if (currentStreak < 2) streakEl.classList.add('hidden');
+        }, 300);
+      }
+    }
+
+    // Web Audio API for Gamification Sounds (Not used on MCQ tab)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      if (type === 'correct') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } else if (type === 'complete') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(554.37, audioCtx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.2);
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.6);
+        if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+      }
+    }
 
     function switchTab(tabId) {
       currentTabId = tabId;
@@ -924,7 +994,6 @@
             circ.setAttribute('stroke-dasharray', 'none');
             txt.setAttribute('fill', '#ffffff');
           } else {
-            // Keep all unplaced pins completely neutral so selecting a label gives nothing away
             circ.setAttribute('fill', '#1e293b');
             circ.setAttribute('stroke', '#94a3b8');
             circ.setAttribute('stroke-dasharray', '3,3');
@@ -970,13 +1039,28 @@
         if (lbl) lbl.placed = true;
         selectedTab1LabelId = null;
         renderTab1();
-        showToast(`Correct! Pin ${pinId} matched (+1 Mark)`, "bg-emerald-600");
+        
+        currentStreak++;
+        updateStreakDisplay();
+        playSound('correct');
+        const score = tab1Labels.filter(l => l.placed).length;
+        if (score === 7) {
+            playSound('complete');
+            showToast(`Perfect! Activity 1 Complete! 🏆`, "bg-amber-500 text-slate-900");
+        } else {
+            showToast(`Correct! (+1 Mark)`, "bg-emerald-600");
+        }
       } else {
+        currentStreak = 0;
+        updateStreakDisplay();
+        playSound('wrong');
         showToast(`Incorrect pin for this structure. Try again!`, "bg-rose-600");
       }
     }
 
     function resetTab1() {
+      currentStreak = 0;
+      updateStreakDisplay();
       tab1Labels.forEach(l => { l.placed = false; l.assignedPin = null; });
       tab1Labels.sort(() => Math.random() - 0.5);
       selectedTab1LabelId = null;
@@ -1117,13 +1201,27 @@
       renderTab2();
 
       if (wasCorrect) {
-        showToast(`Correct! Pin ${evt.pin} successfully matched! (+1 Mark)`, "bg-emerald-600");
+        currentStreak++;
+        updateStreakDisplay();
+        playSound('correct');
+        const score = tab2Events.filter(e => e.pairedPin === e.pin).length;
+        if (score === 6) {
+            playSound('complete');
+            showToast(`Awesome! Activity 2 Complete! 🏆`, "bg-amber-500 text-slate-900");
+        } else {
+            showToast(`Correct! (+1 Mark)`, "bg-emerald-600");
+        }
       } else {
+        currentStreak = 0;
+        updateStreakDisplay();
+        playSound('wrong');
         showToast(`Incorrect match for Pin ${evt.pairedPin}. Review nephron physiology!`, "bg-rose-600");
       }
     }
 
     function resetTab2() {
+      currentStreak = 0;
+      updateStreakDisplay();
       tab2Events.forEach(e => e.pairedPin = null);
       tab2Events.sort(() => Math.random() - 0.5);
       shuffledPinsPool.sort(() => Math.random() - 0.5);
@@ -1206,6 +1304,7 @@
           style = "bg-amber-100 border-amber-500 text-amber-950 ring-2 ring-amber-300 font-black";
         }
 
+        // Updated for larger text fitting
         btn.className = `w-full text-left p-3 sm:p-4 rounded-xl border text-sm sm:text-base transition cursor-pointer flex items-center justify-between gap-2 shadow-sm ${style}`;
         btn.innerHTML = `
           <span class="font-semibold">${mol.name}</span>
@@ -1238,6 +1337,7 @@
           }
         }
 
+        // Updated for larger text fitting
         card.className = `p-3 sm:p-4 rounded-xl border text-sm transition cursor-pointer flex items-center justify-between gap-3 shadow-sm ${borderStyle}`;
         card.innerHTML = `
           <div class="flex-grow space-y-1.5">
@@ -1292,14 +1392,28 @@
         renderTab3();
 
         if (isCorrect) {
-          showToast("Correct! Molecule physiology matched (+1 Mark)", "bg-emerald-600");
+          currentStreak++;
+          updateStreakDisplay();
+          playSound('correct');
+          const score = tab3Matches.filter(m => m.matchedMolId === m.targetId).length;
+          if (score === 5) {
+              playSound('complete');
+              showToast(`Fantastic! Activity 3 Complete! 🏆`, "bg-amber-500 text-slate-900");
+          } else {
+              showToast(`Correct! (+1 Mark)`, "bg-emerald-600");
+          }
         } else {
+          currentStreak = 0;
+          updateStreakDisplay();
+          playSound('wrong');
           showToast("Incorrect match. Review nephron transport mechanisms!", "bg-rose-600");
         }
       }
     }
 
     function resetTab3() {
+      currentStreak = 0;
+      updateStreakDisplay();
       tab3Matches.forEach(m => m.matchedMolId = null);
       tab3Molecules.sort(() => Math.random() - 0.5);
       tab3Targets.sort(() => Math.random() - 0.5);
@@ -1348,13 +1462,13 @@
       {
         q: "What are the three main functions of the mammalian kidney?",
         options: [
-          "Excretion, osmoregulation, and pH balance",
+          "Ultrafiltration, selective reabsorption and osmoregulation",
           "Digestion, ultrafiltration, and hormone production",
           "Red blood cell production, thermal regulation, and excretion",
-          "Osmoregulation, glucose synthesis, and water storage"
+          "Excretion, glucose synthesis, and water storage"
         ],
         ans: 0,
-        rationale: "The kidney's primary biological roles are excreting nitrogenous waste (like urea), regulating blood water potential (osmoregulation), and maintaining acid-base balance."
+        rationale: "The kidney's primary biological roles involve filtering the blood (ultrafiltration), taking back useful substances (selective reabsorption), and maintaining blood water potential (osmoregulation)."
       },
       {
         q: "How does the thick ascending limb of the Loop of Henle generate a hypertonic renal medulla?",
@@ -1631,10 +1745,18 @@
       isMCQTransitioning = true;
       renderMCQ20();
 
-      // Speech Synthesis Feedback
+      // Speech Synthesis Feedback & Streak (NO chime sounds here)
       const isCorrect = (oIdx === mcq20Data[qIndex].ans);
-      const posPhrases = ["Great job!", "On fire!", "Boom!"];
-      const negPhrases = ["Oh no!", "Study harder!", "Did you read that?"];
+      
+      if (isCorrect) {
+        currentStreak++;
+      } else {
+        currentStreak = 0;
+      }
+      updateStreakDisplay();
+
+      const posPhrases = ["Great job!", "On fire!", "Locked in!"];
+      const negPhrases = ["Oh no!", "Study harder!", "Logic retired."];
       const phraseList = isCorrect ? posPhrases : negPhrases;
       const randomPhrase = phraseList[Math.floor(Math.random() * phraseList.length)];
       
@@ -1680,6 +1802,7 @@
       } else {
         feedback.textContent = `Outstanding! Perfect score (${scoreCount}/${activeMCQIndices.length}) achieved!`;
         retestBtn.classList.add('hidden');
+        playSound('complete'); // Perfect score on quiz triggers confetti
       }
     }
 
@@ -1691,6 +1814,8 @@
       activeMCQIndices = missed;
       currentActivePointer = 0;
       isMCQTransitioning = false;
+      currentStreak = 0;
+      updateStreakDisplay();
       document.getElementById('tab4-mode-indicator').textContent = `Retesting ${missed.length} Missed Questions`;
       renderMCQ20();
     }
@@ -1700,6 +1825,8 @@
       activeMCQIndices = Array.from({ length: 20 }, (_, i) => i);
       currentActivePointer = 0;
       isMCQTransitioning = false;
+      currentStreak = 0;
+      updateStreakDisplay();
       document.getElementById('tab4-mode-indicator').textContent = "Standard Mode (20 Questions)";
       renderMCQ20();
       showToast("MCQ Quiz reset!", "bg-slate-700");
@@ -1717,7 +1844,6 @@
       element.addEventListener('touchmove', (e) => handleTouchMove(e, listType), { passive: false });
       element.addEventListener('touchend', (e) => handleTouchEnd(e, listType), { passive: false });
 
-      // HTML5 desktop drag fallback
       element.setAttribute('draggable', 'true');
       element.addEventListener('dragstart', (e) => {
         touchDragSourceList = listType;
@@ -1752,7 +1878,7 @@
 
     function handleTouchMove(e, listType) {
       if (touchDragSourceList !== listType) return;
-      e.preventDefault(); // Stop screen scrolling while dragging sentence with finger
+      e.preventDefault();
       const touch = e.touches[0];
       const elemUnder = document.elementFromPoint(touch.clientX, touch.clientY);
       if (!elemUnder) return;
@@ -1857,10 +1983,12 @@
       fb.classList.remove('hidden');
 
       if (isCorrect) {
+        playSound('complete');
         fb.className = "mt-1 p-1.5 rounded-lg text-xs font-bold border border-emerald-300 bg-emerald-50 text-emerald-900";
         fb.innerHTML = "🎉 Excellent! The entire ADH homeostatic sequence is in correct chronological order (+6 Marks)!";
         showToast("ADH sequence correct! +6 Marks", "bg-emerald-600");
       } else {
+        playSound('wrong');
         fb.className = "mt-1 p-1.5 rounded-lg text-xs font-bold border border-amber-300 bg-amber-50 text-amber-900";
         fb.innerHTML = `⚠️ ${correctCount}/6 steps in correct position. Check brain detection vs cellular cascade response.`;
         showToast("Drag sentences to adjust order!", "bg-amber-600");
@@ -1957,11 +2085,13 @@
       fb.classList.remove('hidden');
 
       if (isCorrect) {
-        fb.className = "mt-1 p-1.5 rounded-lg text-xs font-bold border border-emerald-300 bg-emerald-50 text-emerald-900";
+        playSound('complete');
+        fb.className = "mt-1 p-2 rounded-lg text-sm font-bold border border-emerald-300 bg-emerald-50 text-emerald-900";
         fb.innerHTML = "🎉 Well done! The dialysis steps are in correct logical order (+6 Marks)!";
         showToast("Dialysis sequence correct! +6 Marks", "bg-teal-600");
       } else {
-        fb.className = "mt-1 p-1.5 rounded-lg text-xs font-bold border border-amber-300 bg-amber-50 text-amber-900";
+        playSound('wrong');
+        fb.className = "mt-1 p-2 rounded-lg text-sm font-bold border border-amber-300 bg-amber-50 text-amber-900";
         fb.innerHTML = `⚠️ ${correctCount}/6 sentences in correct sequence. Check blood entry vs return.`;
         showToast("Drag sentences to adjust order!", "bg-amber-600");
       }
@@ -2048,7 +2178,6 @@
     let tab7Evaluated = { 1: false, 2: false, 3: false };
 
     function loadTab7Question(qNum) {
-      // Save current input before switching
       tab7Answers[currentTab7QId] = document.getElementById('tab7-student-answer').value;
 
       currentTab7QId = qNum;
